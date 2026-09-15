@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Core.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Enables dynamic OrderBy("field desc") by string, required by the
+         generic sorting mechanism used by every listing screen -->
+    <!-- 1.6.0+ required: versions before it are affected by CVE-2024-51417
+         (property reflection injection), which matters here specifically
+         because PaginationFilter.SortBy is public, user-controlled input
+         passed straight into query.OrderBy(...) below. -->
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Domain\Core.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

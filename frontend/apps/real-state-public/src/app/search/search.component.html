@@ -1,0 +1,77 @@
+<section class="search-header">
+  <div class="hero-search-container">
+    <ws-search-filter-bar placeholder="Buscar por título, bairro ou cidade..." [initialSearch]="initialSearch()" (searchChange)="onSearchChange($event)">
+      <select [value]="initialListingType()" (change)="onListingTypeChange($any($event.target).value)">
+        <option value="">Comprar ou alugar</option>
+        @for (type of listingTypes; track type) {
+          <option [value]="type">{{ listingTypeLabel(type) }}</option>
+        }
+      </select>
+
+      <select [value]="initialPropertyType()" (change)="onPropertyTypeChange($any($event.target).value)">
+        <option value="">Todos os tipos</option>
+        @for (type of propertyTypes; track type) {
+          <option [value]="type">{{ propertyTypeLabel(type) }}</option>
+        }
+      </select>
+
+      <select [value]="initialMinBedrooms()" (change)="onMinBedroomsChange($any($event.target).value)">
+        <option value="">Quartos (Todos)</option>
+        <option value="1">1+ Quarto</option>
+        <option value="2">2+ Quartos</option>
+        <option value="3">3+ Quartos</option>
+        <option value="4">4+ Quartos</option>
+      </select>
+
+      <input type="number" placeholder="Preço mín." [value]="initialMinPrice()" (change)="onMinPriceChange($any($event.target).value)" />
+      <input type="number" placeholder="Preço máx." [value]="initialMaxPrice()" (change)="onMaxPriceChange($any($event.target).value)" />
+    </ws-search-filter-bar>
+  </div>
+</section>
+
+<div class="catalog">
+  <div class="section-header">
+    <h2>Resultados da Busca</h2>
+    <p>
+      @if (result()?.totalCount; as count) {
+        {{ count }} {{ count === 1 ? 'imóvel encontrado' : 'imóveis encontrados' }}
+      } @else {
+        Buscando imóveis...
+      }
+    </p>
+  </div>
+
+  @if (loading()) {
+    <div class="property-grid">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-image"></div>
+          <div class="skeleton skeleton-line" style="width: 40%"></div>
+          <div class="skeleton skeleton-line" style="width: 80%"></div>
+          <div class="skeleton skeleton-line" style="width: 60%"></div>
+        </div>
+      }
+    </div>
+  } @else if ((result()?.items?.length ?? 0) === 0) {
+    <div class="state-message">Nenhum imóvel encontrado com esses filtros.</div>
+  } @else {
+    <div class="property-grid">
+      @for (property of result()!.items; track property.id) {
+        <app-property-card [property]="property" />
+      }
+    </div>
+  }
+
+  @if (result(); as page) {
+    @if (page.totalCount > 0) {
+      <ws-pagination-bar
+        [pageNumber]="page.pageNumber"
+        [totalPages]="page.totalPages"
+        [totalCount]="page.totalCount"
+        [hasPreviousPage]="page.hasPreviousPage"
+        [hasNextPage]="page.hasNextPage"
+        (pageChange)="onPageChange($event)"
+      />
+    }
+  }
+</div>

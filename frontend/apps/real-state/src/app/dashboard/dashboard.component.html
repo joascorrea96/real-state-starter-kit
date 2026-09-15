@@ -1,0 +1,59 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Resumo geral do seu negócio</p>
+  </header>
+
+  <ng-container *ngIf="loading()">
+    <div class="loading-state">Carregando dados do dashboard...</div>
+  </ng-container>
+
+  <ng-container *ngIf="error()">
+    <div class="error-state">{{ error() }}</div>
+  </ng-container>
+
+  <ng-container *ngIf="summary() as data">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Total de Imóveis</h3>
+        <p class="metric-value">{{ data.totalProperties }}</p>
+      </div>
+      <div class="metric-card">
+        <h3>Imóveis Ativos</h3>
+        <p class="metric-value">{{ data.activeProperties }}</p>
+      </div>
+      <div class="metric-card">
+        <h3>Total de Leads</h3>
+        <p class="metric-value">{{ data.totalLeads }}</p>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <div class="details-panel">
+        <h2>Top 5 Imóveis (Mais Leads)</h2>
+        <div class="empty-state" *ngIf="data.topPropertiesByLeads.length === 0">
+          Nenhum lead associado a imóveis.
+        </div>
+        <ul class="top-list" *ngIf="data.topPropertiesByLeads.length > 0">
+          <li *ngFor="let prop of data.topPropertiesByLeads">
+            <span class="prop-title">{{ prop.title }}</span>
+            <span class="prop-count">{{ prop.leadsCount }} leads</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="details-panel">
+        <h2>Leads por Status</h2>
+        <div class="empty-state" *ngIf="(data.leadsByStatus | keyvalue).length === 0">
+          Nenhum lead encontrado.
+        </div>
+        <ul class="status-list" *ngIf="(data.leadsByStatus | keyvalue).length > 0">
+          <li *ngFor="let status of data.leadsByStatus | keyvalue">
+            <span class="status-name">{{ getLeadStatusName($any(status.key)) }}</span>
+            <span class="status-count">{{ status.value }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </ng-container>
+</div>

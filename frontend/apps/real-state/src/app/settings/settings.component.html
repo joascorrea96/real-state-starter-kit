@@ -1,0 +1,100 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Configurações da Imobiliária</h1>
+      <p class="subtitle">Personalize a identidade visual e contatos do seu site público</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">Carregando configurações...</div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="settings-form">
+      
+      <section class="form-section">
+        <h3>Identidade Visual</h3>
+        
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>Logotipo da Imobiliária</label>
+            <div class="logo-uploader">
+              @if (logoUrl()) {
+                <div class="logo-preview">
+                  <img [src]="logoUrl()" alt="Logotipo" />
+                  <button type="button" class="btn btn-danger btn-sm" (click)="removeLogo()">Remover Logo</button>
+                </div>
+              } @else {
+                <label class="upload-dropzone" [class.disabled]="uploadingLogo()">
+                  <span class="upload-icon">🖼️</span>
+                  <span class="upload-text">Selecione o seu logo (fundo transparente recomendado)</span>
+                  <input 
+                    type="file" 
+                    accept="image/png, image/jpeg, image/webp, image/svg+xml" 
+                    (change)="onLogoSelected($event)" 
+                    [disabled]="uploadingLogo()"
+                    style="display: none;"
+                  />
+                </label>
+              }
+              
+              @if (uploadingLogo()) {
+                <small class="uploading-text">Enviando logo...</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tradeName">Nome Fantasia da Imobiliária</label>
+            <input id="tradeName" type="text" formControlName="tradeName" placeholder="Ex: Imóveis Top" />
+          </div>
+          <div class="form-group">
+            <label for="primaryColor">Cor Principal do Site</label>
+            <div class="color-picker-wrapper">
+              <input id="primaryColor" type="color" formControlName="primaryColor" />
+              <input type="text" [value]="form.get('primaryColor')?.value" disabled class="color-hex" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Informações de Contato</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Telefone Fixo / Padrão</label>
+            <input id="phone" type="text" formControlName="phone" mask="(00) 0000-0000||(00) 0 0000-0000" />
+          </div>
+          <div class="form-group">
+            <label for="whatsapp">Número de WhatsApp</label>
+            <input id="whatsapp" type="text" formControlName="whatsapp" mask="(00) 0 0000-0000" placeholder="Para o botão flutuante" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="instagram">Link do Instagram</label>
+            <input id="instagram" type="url" formControlName="instagram" placeholder="https://instagram.com/suaimobiliaria" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Sobre a Imobiliária</h3>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="aboutText">Texto "Quem Somos" (Aparecerá no rodapé do site)</label>
+            <textarea id="aboutText" formControlName="aboutText" rows="4" placeholder="Conte um pouco sobre sua imobiliária..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving()">
+          {{ saving() ? 'Salvando...' : 'Salvar Configurações' }}
+        </button>
+      </div>
+
+    </form>
+  }
+</div>

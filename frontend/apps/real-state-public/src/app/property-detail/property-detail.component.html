@@ -1,0 +1,192 @@
+@if (loading()) {
+  <div class="detail-page">
+    <div class="skeleton skeleton-back"></div>
+    <div class="skeleton skeleton-hero"></div>
+    <div class="content-layout">
+      <div class="main-content">
+        <div class="skeleton skeleton-line" style="width: 30%"></div>
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-line" style="width: 50%"></div>
+      </div>
+      <div class="skeleton skeleton-sidebar"></div>
+    </div>
+  </div>
+} @else if (notFound() || !property()) {
+  <div class="state-message">
+    <p>Imóvel não encontrado.</p>
+    <a routerLink="/">Voltar ao catálogo</a>
+  </div>
+} @else {
+  @let p = property()!;
+
+  <div class="detail-page">
+    <a routerLink="/" class="back-link">← Voltar ao catálogo</a>
+
+    <div class="gallery-container">
+      @if (p.imageUrls.length > 0) {
+        <div class="main-image-viewer" [style.background-image]="'url(' + p.imageUrls[selectedImageIndex()] + ')'">
+          <img [src]="p.imageUrls[selectedImageIndex()]" [alt]="p.title" style="display: none;" />
+          
+          @if (p.status === 'Sold') {
+            <div class="status-ribbon sold">VENDIDO</div>
+          } @else if (p.status === 'Rented') {
+            <div class="status-ribbon rented">ALUGADO</div>
+          } @else if (p.status === 'Paused') {
+            <div class="status-ribbon paused">PAUSADO</div>
+          }
+
+          @if (p.imageUrls.length > 1) {
+            <button class="nav-arrow prev" (click)="prevImage(p.imageUrls.length)" aria-label="Foto anterior">❮</button>
+            <button class="nav-arrow next" (click)="nextImage(p.imageUrls.length)" aria-label="Próxima foto">❯</button>
+          }
+
+          <button class="expand-btn" (click)="openFullscreen()" aria-label="Ampliar galeria" title="Ampliar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+
+        @if (p.imageUrls.length > 1) {
+          <div class="thumbnails">
+            @for (img of p.imageUrls; track img; let i = $index) {
+              <div 
+                class="thumbnail" 
+                [class.active]="selectedImageIndex() === i"
+                [style.background-image]="'url(' + img + ')'"
+                (click)="selectImage(i)">
+              </div>
+            }
+          </div>
+        }
+      } @else {
+        <div class="main-image-viewer placeholder">
+          <div class="image-placeholder" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 21V8l9-5 9 5v13H3Z" />
+              <path d="M9 21v-7h6v7" />
+            </svg>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="content-layout">
+      <div class="main-content">
+        <span class="type-label">{{ typeLabel(p) }} • {{ isRental(p) ? 'Aluguel' : 'Venda' }}</span>
+        <h1>{{ p.title }}</h1>
+        <p class="location">{{ p.address }} • {{ p.neighborhood }}, {{ p.city }}/{{ p.state }}</p>
+
+        <p class="price">
+          {{ formattedPrice(p) }}
+          @if (formattedCondoFee(p); as condo) {
+            <span class="condo-fee">+ {{ condo }} condomínio</span>
+          }
+        </p>
+
+        <div class="specs-grid">
+          @if (p.bedrooms > 0) {
+            <div class="spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6" />
+                <path d="M3 18v2" /><path d="M21 18v2" />
+                <path d="M3 12V8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              <strong>{{ p.bedrooms }}</strong><span>Quartos</span>
+            </div>
+          }
+          @if (p.bathrooms > 0) {
+            <div class="spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3Z" />
+                <path d="M6 12V6a2 2 0 0 1 3.4-1.4" /><path d="M4 19v2" /><path d="M20 19v2" />
+              </svg>
+              <strong>{{ p.bathrooms }}</strong><span>Banheiros</span>
+            </div>
+          }
+          @if (p.parkingSpots > 0) {
+            <div class="spec">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M5 17h14M5 17a2 2 0 0 1-2-2l1.2-5.4A2 2 0 0 1 6.1 8h11.8a2 2 0 0 1 1.9 1.6L21 15a2 2 0 0 1-2 2" />
+                <circle cx="7" cy="17" r="1.5" /><circle cx="17" cy="17" r="1.5" />
+              </svg>
+              <strong>{{ p.parkingSpots }}</strong><span>Vagas</span>
+            </div>
+          }
+          <div class="spec">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3 3v6h6M21 21v-6h-6M3 3l7 7M21 21l-7-7" />
+            </svg>
+            <strong>{{ p.areaSqm }}</strong><span>m²</span>
+          </div>
+        </div>
+
+        @if (p.description) {
+          <div class="description">
+            <h2>Descrição</h2>
+            <p>{{ p.description }}</p>
+          </div>
+        }
+      </div>
+
+      <aside class="sidebar">
+        @if (p.status === 'Available') {
+          <app-lead-form [propertyId]="p.id" />
+        } @else {
+          <div class="sold-message-box">
+            <h3>Imóvel Negociado!</h3>
+            <p>Excelente escolha, mas este imóvel já não está mais disponível.</p>
+            <p><strong>Aproveite para ver opções similares que ainda temos!</strong></p>
+            <a routerLink="/" class="btn btn-outline" style="margin-top: 1rem; display: block; text-align: center;">Ver mais imóveis</a>
+          </div>
+        }
+      </aside>
+    </div>
+
+    <!-- Similar Properties Section -->
+    @if (!loadingSimilar() && similarProperties().length > 0) {
+      <div class="similar-properties">
+        <h2>Imóveis Semelhantes</h2>
+        
+        <div class="carousel-wrapper">
+          <button class="section-arrow prev" (click)="scrollSimilar('left')" aria-label="Voltar imóveis">❮</button>
+          <div class="carousel-container" #carouselRef>
+            @for (property of similarProperties(); track property.id) {
+              <div class="carousel-item">
+                <app-property-card [property]="property" />
+              </div>
+            }
+          </div>
+          <button class="section-arrow next" (click)="scrollSimilar('right')" aria-label="Avançar imóveis">❯</button>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  @if (fullscreenGallery()) {
+    <div class="fullscreen-modal">
+      <button class="close-btn" (click)="closeFullscreen()" aria-label="Fechar galeria">✕</button>
+      
+      <div class="fullscreen-content">
+        <button class="nav-arrow prev" (click)="prevImage(p.imageUrls.length)" aria-label="Foto anterior">❮</button>
+        <img [src]="p.imageUrls[selectedImageIndex()]" [alt]="p.title" />
+        <button class="nav-arrow next" (click)="nextImage(p.imageUrls.length)" aria-label="Próxima foto">❯</button>
+      </div>
+
+      <div class="fullscreen-thumbnails">
+        @for (img of p.imageUrls; track img; let i = $index) {
+          <div 
+            class="thumbnail" 
+            [class.active]="selectedImageIndex() === i"
+            [style.background-image]="'url(' + img + ')'"
+            (click)="selectImage(i)">
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

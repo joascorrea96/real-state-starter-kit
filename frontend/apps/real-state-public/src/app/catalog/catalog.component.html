@@ -1,0 +1,106 @@
+<section class="hero">
+  <div class="hero-content">
+    <span class="eyebrow">Compra e aluguel</span>
+    <h1>Encontre o imóvel ideal</h1>
+    <p>O melhor catálogo de imóveis da região.</p>
+  </div>
+  
+  <div class="hero-search-container">
+    <ws-search-filter-bar placeholder="Buscar por título, bairro ou cidade..." (searchChange)="onSearchChange($event)">
+      <select (change)="onListingTypeChange($any($event.target).value)">
+        <option value="">Comprar ou alugar</option>
+        @for (type of listingTypes; track type) {
+          <option [value]="type">{{ listingTypeLabel(type) }}</option>
+        }
+      </select>
+
+      <select (change)="onPropertyTypeChange($any($event.target).value)">
+        <option value="">Todos os tipos</option>
+        @for (type of propertyTypes; track type) {
+          <option [value]="type">{{ propertyTypeLabel(type) }}</option>
+        }
+      </select>
+
+      <select (change)="onMinBedroomsChange($any($event.target).value)">
+        <option value="">Quartos (Todos)</option>
+        <option value="1">1+ Quarto</option>
+        <option value="2">2+ Quartos</option>
+        <option value="3">3+ Quartos</option>
+        <option value="4">4+ Quartos</option>
+      </select>
+
+      <input type="number" placeholder="Preço mín." (change)="onMinPriceChange($any($event.target).value)" />
+      <input type="number" placeholder="Preço máx." (change)="onMaxPriceChange($any($event.target).value)" />
+    </ws-search-filter-bar>
+  </div>
+</section>
+
+<div class="catalog">
+  
+  <!-- Destaques -->
+  @if (!loadingFeatured() && featuredProperties().length > 0) {
+    <section class="featured-section">
+      <div class="section-header">
+        <h2>Imóveis em Destaque</h2>
+        <p>Selecionados especialmente para você</p>
+      </div>
+      
+      <div class="carousel-wrapper">
+        <button class="section-arrow prev" (click)="scrollCarousel(0, 'left')" aria-label="Voltar imóveis">❮</button>
+        <div class="carousel-container" #carouselRef>
+          @for (property of featuredProperties(); track property.id) {
+            <div class="carousel-item">
+              <app-property-card [property]="property" />
+            </div>
+          }
+        </div>
+        <button class="section-arrow next" (click)="scrollCarousel(0, 'right')" aria-label="Avançar imóveis">❯</button>
+      </div>
+    </section>
+  }
+
+  <!-- Vendas -->
+  @if (!loadingSale() && saleProperties().length > 0) {
+    <section class="featured-section">
+      <div class="section-header">
+        <h2>Prontos para Morar</h2>
+        <p>As melhores oportunidades de compra</p>
+      </div>
+      
+      <div class="carousel-wrapper">
+        <button class="section-arrow prev" (click)="scrollCarousel(1, 'left')" aria-label="Voltar imóveis">❮</button>
+        <div class="carousel-container" #carouselRef>
+          @for (property of saleProperties(); track property.id) {
+            <div class="carousel-item">
+              <app-property-card [property]="property" />
+            </div>
+          }
+        </div>
+        <button class="section-arrow next" (click)="scrollCarousel(1, 'right')" aria-label="Avançar imóveis">❯</button>
+      </div>
+    </section>
+  }
+
+  <!-- Aluguel -->
+  @if (!loadingRent() && rentProperties().length > 0) {
+    <section class="featured-section">
+      <div class="section-header">
+        <h2>Para Alugar</h2>
+        <p>Encontre seu novo lar rapidamente</p>
+      </div>
+      
+      <div class="carousel-wrapper">
+        <button class="section-arrow prev" (click)="scrollCarousel(2, 'left')" aria-label="Voltar imóveis">❮</button>
+        <div class="carousel-container" #carouselRef>
+          @for (property of rentProperties(); track property.id) {
+            <div class="carousel-item">
+              <app-property-card [property]="property" />
+            </div>
+          }
+        </div>
+        <button class="section-arrow next" (click)="scrollCarousel(2, 'right')" aria-label="Avançar imóveis">❯</button>
+      </div>
+    </section>
+  }
+
+</div>

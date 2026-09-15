@@ -1,0 +1,9 @@
+<div class="pagination-bar">
+  <span class="total-count">{{ totalCount }} {{ totalCount === 1 ? 'registro' : 'registros' }}</span>
+
+  <div class="controls">
+    <button type="button" [disabled]="!hasPreviousPage" (click)="goToPrevious()">← Anterior</button>
+    <span class="page-indicator">Página {{ pageNumber }} de {{ totalPages || 1 }}</span>
+    <button type="button" [disabled]="!hasNextPage" (click)="goToNext()">Próxima →</button>
+  </div>
+</div>

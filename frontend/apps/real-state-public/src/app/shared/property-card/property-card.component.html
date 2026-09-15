@@ -1,0 +1,77 @@
+<a class="property-card" [routerLink]="['/imoveis', property().id]" [class.is-negotiated]="property().status !== 'Available'">
+  <div class="card-image">
+    @if (currentImage(); as image) {
+      <img [src]="image" [alt]="property().title" loading="lazy" />
+      
+      @if (hasMultipleImages()) {
+        <button class="nav-arrow prev" (click)="prevImage($event)" aria-label="Imagem anterior">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="nav-arrow next" (click)="nextImage($event)" aria-label="Próxima imagem">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <div class="dots">
+          @for (img of property().imageUrls; track img; let i = $index) {
+            <span class="dot" [class.active]="i === currentImageIndex()"></span>
+          }
+        </div>
+      }
+    } @else {
+      <div class="image-placeholder" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 21V8l9-5 9 5v13H3Z" />
+          <path d="M9 21v-7h6v7" />
+        </svg>
+      </div>
+    }
+    
+    @if (property().status === 'Sold') {
+      <div class="status-ribbon sold">VENDIDO</div>
+    } @else if (property().status === 'Rented') {
+      <div class="status-ribbon rented">ALUGADO</div>
+    } @else if (property().status === 'Paused') {
+      <div class="status-ribbon paused">PAUSADO</div>
+    }
+
+    <span class="listing-badge" [class.rental]="isRental()">
+      {{ isRental() ? 'Aluguel' : 'Venda' }}
+    </span>
+    @if (property().isFeatured && property().status === 'Available') {
+      <span class="featured-badge">Destaque</span>
+    }
+  </div>
+
+  <div class="card-body">
+    <span class="type-label">{{ typeLabel() }}</span>
+    <h3 class="title">{{ property().title }}</h3>
+    <p class="location">{{ property().neighborhood }}, {{ property().city }}</p>
+
+    <div class="specs">
+      @if (property().bedrooms > 0) {
+        <span class="spec-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h18M3 10h18M3 6h18M3 18h18"/></svg>
+          {{ property().bedrooms }} qts
+        </span>
+      }
+      @if (property().bathrooms > 0) {
+        <span class="spec-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 12H16c-.7 2-2 3-4 3s-3.3-1-4-3H2.5"/><path d="M5.5 5.1L2 12v6c0 1.1.9 2 2 2h16a2 2 0 002-2v-6l-3.5-6.9A2 2 0 0016.7 5H7.3a2 2 0 00-1.8 1.1z"/></svg>
+          {{ property().bathrooms }} ban.
+        </span>
+      }
+      <span class="spec-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M3 9h18M9 21V9"/></svg>
+        {{ property().areaSqm | number: '1.0-0' }} m²
+      </span>
+    </div>
+
+    <div class="card-footer">
+      <p class="price">{{ formattedPrice() }}</p>
+      <button class="favorite-btn" [class.is-favorite]="isFavorite()" (click)="toggleFavorite($event)" aria-label="Favoritar imóvel">
+        <svg width="24" height="24" viewBox="0 0 24 24" [attr.fill]="isFavorite() ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</a>

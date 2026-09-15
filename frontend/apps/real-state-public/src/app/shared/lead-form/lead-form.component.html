@@ -1,0 +1,42 @@
+<div class="lead-form">
+  @if (submitted()) {
+    <div class="success-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+      <p><strong>Recebemos seu contato!</strong></p>
+      <p class="muted">Em breve alguém da equipe vai falar com você.</p>
+    </div>
+  } @else {
+    <h3>Tenho interesse</h3>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        Nome
+        <input type="text" formControlName="name" placeholder="Seu nome" />
+      </label>
+
+      <label>
+        Telefone / WhatsApp
+        <input type="tel" formControlName="phone" placeholder="(00) 00000-0000" />
+      </label>
+
+      <label>
+        Email (opcional)
+        <input type="email" formControlName="email" placeholder="seu@email.com" />
+      </label>
+
+      <label>
+        Mensagem (opcional)
+        <textarea formControlName="message" rows="3" placeholder="Gostaria de agendar uma visita..."></textarea>
+      </label>
+
+      @if (errorMessage(); as error) {
+        <p class="error">{{ error }}</p>
+      }
+
+      <button type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Enviando...' : 'Enviar' }}
+      </button>
+    </form>
+  }
+</div>

@@ -1,0 +1,28 @@
+<div class="login-page">
+  <form class="card login-card" [formGroup]="form" (ngSubmit)="submit()">
+    <h1>Entrar</h1>
+    <p class="subtitle">Acesse o painel de imóveis.</p>
+
+    <label>
+      <span>Email</span>
+      <input type="email" formControlName="email" autocomplete="email" />
+    </label>
+
+    <label>
+      <span>Senha</span>
+      <input type="password" formControlName="password" autocomplete="current-password" />
+    </label>
+    <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-4); cursor: pointer;">
+      <input type="checkbox" formControlName="rememberMe" style="width: auto; margin: 0;" />
+      <span style="margin: 0; font-size: 0.9rem; color: var(--color-ink-muted);">Lembrar meu acesso</span>
+    </label>
+
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" class="btn-primary" [disabled]="loading()">
+      {{ loading() ? 'Entrando...' : 'Entrar' }}
+    </button>
+  </form>
+</div>

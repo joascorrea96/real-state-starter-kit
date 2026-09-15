@@ -1,0 +1,116 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Atendimento do Lead</h1>
+      <p class="subtitle">Gerencie o contato e acompanhe o funil de vendas</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card loading-state">
+      <p>Carregando dados do lead...</p>
+    </div>
+  } @else if (originalLead) {
+    <div class="crm-container">
+      
+      <!-- Left Column: Lead Profile -->
+      <div class="card profile-card">
+        <div class="profile-header">
+          <div class="profile-title">
+            <h2>{{ originalLead.name }}</h2>
+            <span class="badge" [class]="'badge-' + originalLead.status.toLowerCase()">{{ getStatusLabel(originalLead.status) }}</span>
+          </div>
+        </div>
+
+        <div class="profile-body">
+          <div class="info-list">
+            <div class="info-item">
+              <div class="icon-wrapper">📞</div>
+              <div class="detail">
+                <label>Telefone</label>
+                <p>{{ originalLead.phone }}</p>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="icon-wrapper">✉️</div>
+              <div class="detail">
+                <label>E-mail</label>
+                <p>{{ originalLead.email || 'Não informado' }}</p>
+              </div>
+            </div>
+
+            @if (originalLead.property) {
+              <div class="info-item">
+                <div class="icon-wrapper">🏠</div>
+                <div class="detail">
+                  <label>Imóvel de Interesse</label>
+                  <p class="highlight">{{ originalLead.property.title }}</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (originalLead.message) {
+            <div class="message-wrapper">
+              <label>Mensagem do Cliente</label>
+              <div class="message-box">
+                <p>"{{ originalLead.message }}"</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right Column: CRM Actions -->
+      <div class="card actions-card">
+        <div class="actions-header">
+          <h3>Atualizar Funil</h3>
+          <p class="helper-text">Mova o lead pelas etapas de venda</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-content">
+          
+          <div class="form-group">
+            <label for="status">Fase de Atendimento</label>
+            <div class="select-wrapper">
+              <select id="status" formControlName="status" class="styled-select">
+                @for (status of statuses; track status.value) {
+                  <option [value]="status.value">{{ status.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="assignedUserId">Corretor Responsável</label>
+            @if (isAdmin()) {
+              <div class="select-wrapper">
+                <select id="assignedUserId" formControlName="assignedUserId" class="styled-select">
+                  <option value="">Sem atribuição (Fila Global)</option>
+                  @for (user of users(); track user.id) {
+                    <option [value]="user.id">{{ user.name }} ({{ user.role === 'CompanyAdmin' ? 'Gerente' : 'Corretor' }})</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div class="readonly-field">
+                <span class="readonly-icon">👤</span>
+                {{ originalLead.assignedUser?.name || 'Sem atribuição' }}
+              </div>
+              <small class="helper-text-inline">Apenas gerentes podem transferir leads.</small>
+            }
+          </div>
+
+          <div class="form-footer" style="display: flex; gap: var(--space-3); width: 100%;">
+            <a routerLink="/leads" class="btn btn-outline" style="flex: 1; text-align: center;">Cancelar</a>
+            <button type="submit" class="btn btn-primary" style="flex: 2;" [disabled]="form.invalid || saving()">
+              {{ saving() ? 'Salvando...' : 'Salvar Alterações' }}
+            </button>
+          </div>
+        </form>
+      </div>
+      
+    </div>
+  }
+</div>

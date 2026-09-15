@@ -1,0 +1,37 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Leads</h1>
+    <p class="subtitle">Contatos recebidos pelo site público</p>
+  </header>
+
+  <ws-search-filter-bar placeholder="Buscar por nome, telefone ou email..." (searchChange)="onSearchChange($event)">
+    <select (change)="onStatusChange($any($event.target).value)">
+      <option value="">Todos os status</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ statusLabel(status) }}</option>
+      }
+    </select>
+  </ws-search-filter-bar>
+
+  <ws-data-table
+    [columns]="columns"
+    [rows]="result()?.items ?? []"
+    [loading]="loading()"
+    [sortBy]="'createdAt'"
+    [sortDescending]="true"
+    emptyMessage="Nenhum lead recebido ainda."
+    (sortChange)="onSortChange($event)"
+    (rowClick)="onRowClick($event)"
+  />
+
+  @if (result(); as page) {
+    <ws-pagination-bar
+      [pageNumber]="page.pageNumber"
+      [totalPages]="page.totalPages"
+      [totalCount]="page.totalCount"
+      [hasPreviousPage]="page.hasPreviousPage"
+      [hasNextPage]="page.hasNextPage"
+      (pageChange)="onPageChange($event)"
+    />
+  }
+</div>

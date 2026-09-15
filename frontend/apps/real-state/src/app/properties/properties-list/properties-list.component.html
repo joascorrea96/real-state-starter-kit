@@ -1,0 +1,52 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div>
+        <h1>Imóveis</h1>
+        <p class="subtitle">Catálogo de imóveis cadastrados</p>
+      </div>
+      <a class="btn btn-primary" routerLink="/properties/new">Novo Imóvel</a>
+    </div>
+  </header>
+
+  <ws-search-filter-bar placeholder="Buscar por título, bairro ou cidade..." (searchChange)="onSearchChange($event)">
+    <select (change)="onPropertyTypeChange($any($event.target).value)">
+      <option value="">Todos os tipos</option>
+      @for (type of propertyTypes; track type) {
+        <option [value]="type">{{ propertyTypeLabel(type) }}</option>
+      }
+    </select>
+
+    <select (change)="onListingTypeChange($any($event.target).value)">
+      <option value="">Venda ou aluguel</option>
+      @for (type of listingTypes; track type) {
+        <option [value]="type">{{ listingTypeLabel(type) }}</option>
+      }
+    </select>
+
+    <input type="number" placeholder="Preço mín." (change)="onMinPriceChange($any($event.target).value)" />
+    <input type="number" placeholder="Preço máx." (change)="onMaxPriceChange($any($event.target).value)" />
+  </ws-search-filter-bar>
+
+  <ws-data-table
+    [columns]="columns"
+    [rows]="result()?.items ?? []"
+    [loading]="loading()"
+    [sortBy]="undefined"
+    emptyMessage="Nenhum imóvel encontrado com esses filtros."
+    (sortChange)="onSortChange($event)"
+    (rowClick)="editProperty($event)"
+    style="cursor: pointer;"
+  />
+
+  @if (result(); as page) {
+    <ws-pagination-bar
+      [pageNumber]="page.pageNumber"
+      [totalPages]="page.totalPages"
+      [totalCount]="page.totalCount"
+      [hasPreviousPage]="page.hasPreviousPage"
+      [hasNextPage]="page.hasNextPage"
+      (pageChange)="onPageChange($event)"
+    />
+  }
+</div>

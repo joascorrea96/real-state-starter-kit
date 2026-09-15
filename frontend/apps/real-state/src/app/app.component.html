@@ -1,0 +1,20 @@
+@if (isAuthenticated()) {
+  <header class="app-header">
+    <span class="brand">Painel Admin</span>
+    <nav class="main-nav">
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/properties" routerLinkActive="active">Imóveis</a>
+      <a routerLink="/leads" routerLinkActive="active">Leads</a>
+      @if (currentUser()?.role === 'CompanyAdmin' || currentUser()?.role === 'SuperAdmin') {
+        <a routerLink="/users" routerLinkActive="active">Equipe</a>
+        <a routerLink="/settings" routerLinkActive="active">Configurações</a>
+      }
+    </nav>
+    <div class="user-info">
+      <span>{{ currentUser()?.name }}</span>
+      <button type="button" (click)="logout()">Sair</button>
+    </div>
+  </header>
+}
+
+<router-outlet></router-outlet>

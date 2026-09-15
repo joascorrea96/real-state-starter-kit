@@ -1,0 +1,190 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div>
+        <h1>{{ isEditing() ? 'Editar Imóvel' : 'Novo Imóvel' }}</h1>
+        <p class="subtitle">Preencha os detalhes do imóvel</p>
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">Carregando imóvel...</div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="property-form">
+      
+      <section class="form-section">
+        <h3>Informações Básicas</h3>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="title">Título do Anúncio</label>
+            <input id="title" type="text" formControlName="title" placeholder="Ex: Apartamento incrível no Centro" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="description">Descrição</label>
+            <textarea id="description" formControlName="description" rows="4"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type">Tipo de Imóvel</label>
+            <select id="type" formControlName="type">
+              @for (type of propertyTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="listingType">Venda/Aluguel</label>
+            <select id="listingType" formControlName="listingType">
+              @for (type of listingTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="status">Status Comercial</label>
+            <select id="status" formControlName="status">
+              @for (s of propertyStatuses; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Valores</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Preço (R$)</label>
+            <input id="price" type="text" formControlName="price" mask="separator.2" thousandSeparator="." decimalMarker="," prefix="R$ " />
+          </div>
+          <div class="form-group">
+            <label for="condoFee">Condomínio (R$)</label>
+            <input id="condoFee" type="text" formControlName="condoFee" mask="separator.2" thousandSeparator="." decimalMarker="," prefix="R$ " />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Especificações</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="areaSqm">Área (m²)</label>
+            <input id="areaSqm" type="text" formControlName="areaSqm" mask="0*" />
+          </div>
+          <div class="form-group">
+            <label for="bedrooms">Quartos</label>
+            <input id="bedrooms" type="text" formControlName="bedrooms" mask="0*" />
+          </div>
+          <div class="form-group">
+            <label for="bathrooms">Banheiros</label>
+            <input id="bathrooms" type="text" formControlName="bathrooms" mask="0*" />
+          </div>
+          <div class="form-group">
+            <label for="parkingSpots">Vagas</label>
+            <input id="parkingSpots" type="text" formControlName="parkingSpots" mask="0*" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Endereço</h3>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="address">Logradouro (Rua, Av, etc)</label>
+            <input id="address" type="text" formControlName="address" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="neighborhood">Bairro</label>
+            <input id="neighborhood" type="text" formControlName="neighborhood" />
+          </div>
+          <div class="form-group">
+            <label for="city">Cidade</label>
+            <input id="city" type="text" formControlName="city" />
+          </div>
+          <div class="form-group">
+            <label for="state">Estado (UF)</label>
+            <input id="state" type="text" formControlName="state" />
+          </div>
+          <div class="form-group">
+            <label for="zipCode">CEP</label>
+            <input id="zipCode" type="text" formControlName="zipCode" mask="00000-000" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Imagens</h3>
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label class="upload-dropzone" for="imageUpload" [class.disabled]="uploadingImages()">
+              <span class="upload-icon">📁</span>
+              <span class="upload-text">Clique para selecionar as fotos (PNG, JPG)</span>
+              <input 
+                id="imageUpload" 
+                type="file" 
+                accept="image/png, image/jpeg, image/webp" 
+                multiple 
+                (change)="onFileSelected($event)" 
+                [disabled]="uploadingImages()"
+                style="display: none;"
+              />
+            </label>
+            
+            @if (uploadingImages()) {
+              <small style="color: var(--color-accent); font-weight: bold; display: block; margin-top: 8px;">Fazendo upload das imagens, por favor aguarde...</small>
+            }
+            
+            @if (uploadedImages.length > 0) {
+              <div class="image-gallery">
+                @for (url of uploadedImages; track url; let i = $index) {
+                  <div class="image-item">
+                    <img [src]="url" alt="Foto do Imóvel" />
+                    <button type="button" class="btn btn-danger btn-sm" (click)="removeImage(i)">X</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Configurações</h3>
+        <div class="form-row">
+          <div class="form-group checkbox-group">
+            <input id="isActive" type="checkbox" formControlName="isActive" />
+            <label for="isActive">Imóvel Ativo (Visível no site público)</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group checkbox-group">
+            <input id="isFeatured" type="checkbox" formControlName="isFeatured" />
+            <label for="isFeatured">Imóvel em Destaque</label>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions" style="display: flex; justify-content: space-between;">
+        <div>
+          @if (isEditing()) {
+            <button type="button" class="btn btn-danger" (click)="deleteProperty()" [disabled]="saving()">Excluir</button>
+          }
+        </div>
+        <div style="display: flex; gap: var(--space-3);">
+          <a class="btn btn-outline" routerLink="/properties" [class.disabled]="saving()">Cancelar</a>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving()">
+            {{ saving() ? 'Salvando...' : 'Salvar Imóvel' }}
+          </button>
+        </div>
+      </div>
+
+    </form>
+  }
+</div>

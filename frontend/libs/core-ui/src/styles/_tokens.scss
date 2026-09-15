@@ -1,0 +1,57 @@
+/**
+ * Shared design tokens for every vertical app. Values live as CSS custom
+ * properties so a specific client company can override --color-accent
+ * (and a couple of others) at runtime from Company.settingsJson, without
+ * touching component code — that's the white-label mechanism.
+ *
+ * Palette: warm paper background with a deep pine accent — chosen to
+ * read as "trustworthy back-office tool" rather than a generic dashboard
+ * template, and calm enough to sit behind dense data tables all day.
+ */
+:root {
+  /* Color */
+  --color-bg: #f6f4ef;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #efece3;
+  --color-border: #e2ddd0;
+  --color-ink: #1c1f1c;
+  --color-ink-muted: #6b6f64;
+  --color-accent: #2f5d50;
+  --color-accent-hover: #24483e;
+  --color-accent-contrast: #ffffff;
+  --color-danger: #a4342a;
+  --color-success: #2f6b3a;
+  --color-warning: #a86a1c;
+
+  /* Typography */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Radius & shadow — soft, editorial, not pill-shaped/glassy defaults */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-card: 0 1px 2px rgba(28, 31, 28, 0.06), 0 1px 1px rgba(28, 31, 28, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}

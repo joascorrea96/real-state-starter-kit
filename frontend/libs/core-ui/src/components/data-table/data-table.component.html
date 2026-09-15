@@ -1,0 +1,51 @@
+<div class="table-wrapper">
+  <table class="ws-table">
+    <thead>
+      <tr>
+        @for (column of columns; track column.key) {
+          <th
+            [class.sortable]="column.sortable"
+            [class.align-right]="column.align === 'right'"
+            [class.align-center]="column.align === 'center'"
+            (click)="onHeaderClick(column)"
+          >
+            <span class="th-content">
+              {{ column.label }}
+              @if (column.sortable && sortBy === column.key) {
+                <span class="sort-indicator">{{ sortDescending ? '↓' : '↑' }}</span>
+              }
+            </span>
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @if (loading) {
+        @for (i of skeletonRowsArray; track i) {
+          <tr class="skeleton-row">
+            @for (column of columns; track column.key) {
+              <td><div class="skeleton skeleton-cell"></div></td>
+            }
+          </tr>
+        }
+      } @else if (rows.length === 0) {
+        <tr class="state-row">
+          <td [attr.colspan]="columns.length">{{ emptyMessage }}</td>
+        </tr>
+      } @else {
+        @for (row of rows; track trackRow($index, row)) {
+          <tr (click)="rowClick.emit(row)">
+            @for (column of columns; track column.key) {
+              <td
+                [class.align-right]="column.align === 'right'"
+                [class.align-center]="column.align === 'center'"
+              >
+                {{ cellValue(column, row) }}
+              </td>
+            }
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

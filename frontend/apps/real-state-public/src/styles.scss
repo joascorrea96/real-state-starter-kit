@@ -1,0 +1,7 @@
+// Design tokens (libs/core-ui/src/styles/_tokens.scss) are loaded globally
+// via angular.json "styles" array — nothing extra needed here besides
+// app-specific resets.
+
+a {
+  color: inherit;
+}
