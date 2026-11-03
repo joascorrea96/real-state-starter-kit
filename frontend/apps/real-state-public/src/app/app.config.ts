@@ -4,7 +4,6 @@ import { provideRouter } from '@angular/router';
 import { API_BASE_URL, COMPANY_SLUG } from '@web-systems/core-data';
 import { environment } from '../environments/environment';
 import { appRoutes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,6 +12,6 @@ export const appConfig: ApplicationConfig = {
     // every request is anonymous and scoped by COMPANY_SLUG instead.
     provideHttpClient(),
     { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
-    { provide: COMPANY_SLUG, useValue: environment.companySlug }, provideClientHydration(),
+    { provide: COMPANY_SLUG, useValue: environment.companySlug },
   ],
 };

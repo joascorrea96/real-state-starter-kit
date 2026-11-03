@@ -43,12 +43,27 @@ export class AppComponent {
           this.whatsappLink.set(`https://wa.me/55${digitsOnly}`); // Assume BR country code if missing
         }
 
-        if (settings.primaryColor) {
+        if (settings.primaryColor && typeof document !== 'undefined') {
           document.documentElement.style.setProperty('--color-primary', settings.primaryColor);
           document.documentElement.style.setProperty('--color-accent', settings.primaryColor);
+          const contrast = this.getContrastColor(settings.primaryColor);
+          document.documentElement.style.setProperty('--color-primary-contrast', contrast);
+          document.documentElement.style.setProperty('--color-accent-contrast', contrast);
         }
       },
       error: () => {},
     });
+  }
+
+  private getContrastColor(hexColor: string): string {
+    const hex = hexColor.replace('#', '');
+    if (hex.length === 6) {
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      return yiq >= 128 ? '#1c1f1c' : '#ffffff';
+    }
+    return '#ffffff';
   }
 }

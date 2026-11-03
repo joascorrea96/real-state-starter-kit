@@ -8,7 +8,9 @@ const app = process.env.APP_TARGET || process.env.TARGET_APP || 'real-state-publ
 console.log(`[Vercel Build] Building application: ${app}...`);
 execSync(`npx ng build ${app} --configuration production`, { stdio: 'inherit' });
 
-const outputDir = `dist/apps/${app}/browser`;
+const outputDir = fs.existsSync(`dist/apps/${app}/browser`)
+  ? `dist/apps/${app}/browser`
+  : `dist/apps/${app}`;
 console.log(`[Vercel Build] Copying files from ${outputDir} to dist/current...`);
 
 if (fs.existsSync('dist/current')) {

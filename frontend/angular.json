@@ -78,12 +78,7 @@
               "libs/core-ui/src/styles/_tokens.scss",
               "apps/real-state-public/src/styles.scss"
             ],
-            "scripts": [],
-            "server": "apps/real-state-public/src/main.server.ts",
-            "prerender": true,
-            "ssr": {
-              "entry": "apps/real-state-public/server.ts"
-            }
+            "scripts": []
           },
           "configurations": {
             "production": {
