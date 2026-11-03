@@ -89,6 +89,13 @@
         </div>
       </section>
 
+      @if (savedSuccess()) {
+        <div class="success-alert">
+          <span class="icon">✓</span>
+          <span>Configurações salvas com sucesso! As alterações já estão disponíveis no site público.</span>
+        </div>
+      }
+
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving()">
           {{ saving() ? 'Salvando...' : 'Salvar Configurações' }}

@@ -23,6 +23,7 @@ export class SettingsComponent implements OnInit {
 
   readonly loading = signal(false);
   readonly saving = signal(false);
+  readonly savedSuccess = signal(false);
   readonly uploadingLogo = signal(false);
 
   form!: FormGroup;
@@ -124,7 +125,8 @@ export class SettingsComponent implements OnInit {
     this.companyService.updateMyCompany(data).subscribe({
       next: () => {
         this.saving.set(false);
-        this.router.navigate(['/dashboard']);
+        this.savedSuccess.set(true);
+        setTimeout(() => this.savedSuccess.set(false), 4000);
       },
       error: (err) => {
         console.error(err);

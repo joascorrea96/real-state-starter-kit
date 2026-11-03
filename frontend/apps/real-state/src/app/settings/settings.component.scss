@@ -162,6 +162,25 @@
   }
 }
 
+.success-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: var(--space-4);
+
+  .icon {
+    font-weight: bold;
+    font-size: 16px;
+  }
+}
+
 .form-actions {
   margin-top: var(--space-6);
   padding-top: var(--space-4);
