@@ -67,6 +67,14 @@ export const appRoutes: Routes = [
       import('./users/user-form/user-form.component').then((m) => m.UserFormComponent),
   },
   {
+    path: 'whatsapp',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./whatsapp/whatsapp-connection/whatsapp-connection.component').then(
+        (m) => m.WhatsAppConnectionComponent,
+      ),
+  },
+  {
     path: 'settings',
     canActivate: [authGuard],
     loadComponent: () =>

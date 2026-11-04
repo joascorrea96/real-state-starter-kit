@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Api.Auth;
 using Api.Public;
+using Api.Services;
 using Core.Application.Interfaces;
 using Core.Application.Services;
 using Core.Domain.Interfaces;
@@ -80,6 +81,7 @@ builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 builder.Services.AddScoped<IGenericService<Property>, PropertyService>();
 builder.Services.AddScoped<IGenericService<Lead>, LeadService>();
 builder.Services.AddScoped<ICompanySlugResolver, CompanySlugResolver>();
+builder.Services.AddHttpClient<IEvolutionApiService, EvolutionApiService>();
 
 // ---- Controllers & Swagger ----
 // Enums serialized/deserialized as strings ("Apartment", "ForSale"), not
