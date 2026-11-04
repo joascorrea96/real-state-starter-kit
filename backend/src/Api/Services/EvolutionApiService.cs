@@ -182,4 +182,32 @@ public class EvolutionApiService : IEvolutionApiService
             return false;
         }
     }
+
+    public async Task SetWebhookAsync(string instanceName, string webhookUrl)
+    {
+        try
+        {
+            var payload = new
+            {
+                webhook = new
+                {
+                    enabled = true,
+                    url = webhookUrl,
+                    byEvents = false,
+                    base64 = false,
+                    events = new[]
+                    {
+                        "MESSAGES_UPSERT",
+                        "CONNECTION_UPDATE"
+                    }
+                }
+            };
+
+            await _http.PostAsJsonAsync($"webhook/set/{instanceName}", payload);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Não foi possível definir o webhook para {InstanceName}", instanceName);
+        }
+    }
 }

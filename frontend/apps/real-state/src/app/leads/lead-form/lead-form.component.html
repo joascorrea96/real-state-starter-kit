@@ -13,102 +13,187 @@
   } @else if (originalLead) {
     <div class="crm-container">
       
-      <!-- Left Column: Lead Profile -->
-      <div class="card profile-card">
-        <div class="profile-header">
-          <div class="profile-title">
-            <h2>{{ originalLead.name }}</h2>
-            <span class="badge" [class]="'badge-' + originalLead.status.toLowerCase()">{{ getStatusLabel(originalLead.status) }}</span>
+      <!-- Left Column: Lead Profile & WhatsApp Chat -->
+      <div class="left-column">
+        
+        <!-- Profile Card -->
+        <div class="card profile-card">
+          <div class="profile-header">
+            <div class="profile-title">
+              <h2>{{ originalLead.name }}</h2>
+              <span class="badge" [class]="'badge-' + originalLead.status.toLowerCase()">{{ getStatusLabel(originalLead.status) }}</span>
+            </div>
           </div>
-        </div>
 
-        <div class="profile-body">
-          <div class="info-list">
-            <div class="info-item">
-              <div class="icon-wrapper">📞</div>
-              <div class="detail">
-                <label>Telefone</label>
-                <p>{{ originalLead.phone }}</p>
-              </div>
-            </div>
-            
-            <div class="info-item">
-              <div class="icon-wrapper">✉️</div>
-              <div class="detail">
-                <label>E-mail</label>
-                <p>{{ originalLead.email || 'Não informado' }}</p>
-              </div>
-            </div>
-
-            @if (originalLead.property) {
+          <div class="profile-body">
+            <div class="info-list">
               <div class="info-item">
-                <div class="icon-wrapper">🏠</div>
+                <div class="icon-wrapper">📞</div>
                 <div class="detail">
-                  <label>Imóvel de Interesse</label>
-                  <p class="highlight">{{ originalLead.property.title }}</p>
+                  <label>Telefone</label>
+                  <p>{{ originalLead.phone }}</p>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <div class="icon-wrapper">✉️</div>
+                <div class="detail">
+                  <label>E-mail</label>
+                  <p>{{ originalLead.email || 'Não informado' }}</p>
+                </div>
+              </div>
+
+              @if (originalLead.property) {
+                <div class="info-item">
+                  <div class="icon-wrapper">🏠</div>
+                  <div class="detail">
+                    <label>Imóvel de Interesse</label>
+                    <p class="highlight">{{ originalLead.property.title }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (originalLead.message) {
+              <div class="message-wrapper">
+                <label>Mensagem Recebida do Site</label>
+                <div class="message-box">
+                  <p>"{{ originalLead.message }}"</p>
                 </div>
               </div>
             }
           </div>
+        </div>
 
-          @if (originalLead.message) {
-            <div class="message-wrapper">
-              <label>Mensagem do Cliente</label>
-              <div class="message-box">
-                <p>"{{ originalLead.message }}"</p>
-              </div>
+        <!-- WhatsApp Live Chat Card -->
+        <div class="card whatsapp-chat-card">
+          <div class="chat-header">
+            <div class="chat-header-title">
+              <span class="chat-brand-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M12.031 2C6.5 2 2.008 6.492 2.008 12.023c0 1.766.46 3.492 1.336 5.016L2 22l5.125-1.344a9.98 9.98 0 0 0 4.906 1.289h.004c5.527 0 10.02-4.492 10.02-10.023A10.03 10.03 0 0 0 12.031 2zm5.836 14.184c-.242.68-1.41 1.258-1.957 1.34-.52.078-1.199.11-3.668-.914-3.156-1.31-5.184-4.52-5.34-4.73-.156-.21-1.281-1.703-1.281-3.242 0-1.54.805-2.297 1.09-2.61.285-.312.625-.39.832-.39.207 0 .414.004.598.012.195.012.457-.074.715.547.266.637.91 2.227.992 2.39.082.164.137.356.027.575-.11.218-.164.355-.328.546-.164.192-.344.426-.492.574-.164.164-.336.34-.145.668.192.328.852 1.402 1.824 2.27 1.254 1.117 2.309 1.464 2.637 1.628.328.164.519.137.711-.082.191-.219.82-.957 1.039-1.285.219-.328.438-.274.738-.164.3.11 1.903.898 2.23 1.062.328.165.547.246.629.383.082.137.082.793-.16 1.473z"/>
+                </svg>
+              </span>
+              <h3>Conversas no WhatsApp</h3>
             </div>
-          }
-        </div>
-      </div>
 
-      <!-- Right Column: CRM Actions -->
-      <div class="card actions-card">
-        <div class="actions-header">
-          <h3>Atualizar Funil</h3>
-          <p class="helper-text">Mova o lead pelas etapas de venda</p>
-        </div>
-
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-content">
-          
-          <div class="form-group">
-            <label for="status">Fase de Atendimento <span class="required">*</span></label>
-            <div class="select-wrapper">
-              <select id="status" formControlName="status" class="styled-select">
-                @for (status of statuses; track status.value) {
-                  <option [value]="status.value">{{ status.label }}</option>
-                }
-              </select>
+            <div class="chat-status-meta">
+              @if (whatsAppStatus()?.isConnected) {
+                <span class="chat-status-badge online">● WhatsApp Conectado</span>
+              } @else {
+                <a routerLink="/whatsapp" class="chat-status-badge offline" title="Clique para conectar seu WhatsApp">
+                  ⚠️ WhatsApp Desconectado (Clique para Conectar)
+                </a>
+              }
             </div>
           </div>
-          
-          <div class="form-group">
-            <label for="assignedUserId">Corretor Responsável</label>
-            @if (isAdmin()) {
-              <div class="select-wrapper">
-                <select id="assignedUserId" formControlName="assignedUserId" class="styled-select">
-                  <option value="">Sem atribuição (Fila Global)</option>
-                  @for (user of users(); track user.id) {
-                    <option [value]="user.id">{{ user.name }} ({{ user.role === 'CompanyAdmin' ? 'Gerente' : 'Corretor' }})</option>
-                  }
-                </select>
+
+          <!-- Messages History Container -->
+          <div class="chat-messages-container" #messagesContainer>
+            @if (messages().length === 0) {
+              <div class="chat-empty-state">
+                <p>Nenhuma mensagem enviada ou recebida por aqui ainda.</p>
+                <small>Digite abaixo para falar diretamente com o cliente pelo WhatsApp da imobiliária.</small>
               </div>
             } @else {
-              <div class="readonly-field">
-                <span class="readonly-icon">👤</span>
-                {{ originalLead.assignedUser?.name || 'Sem atribuição' }}
+              <div class="messages-flow">
+                @for (msg of messages(); track msg.id) {
+                  <div class="chat-bubble-row" [class.is-mine]="msg.fromMe">
+                    <div class="chat-bubble" [class.bubble-mine]="msg.fromMe" [class.bubble-theirs]="!msg.fromMe">
+                      <div class="bubble-sender">{{ msg.senderName || (msg.fromMe ? 'Corretor' : originalLead.name) }}</div>
+                      <div class="bubble-text">{{ msg.messageText }}</div>
+                      <div class="bubble-meta">
+                        <span class="bubble-time">{{ formatTime(msg.timestamp) }}</span>
+                        @if (msg.fromMe) {
+                          <span class="bubble-check">✓✓</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
               </div>
-              <small class="helper-text-inline">Apenas gerentes podem transferir leads.</small>
             }
           </div>
 
-          <div class="form-footer" style="display: flex; gap: var(--space-3); width: 100%;">
-            <a routerLink="/leads" class="btn btn-outline" style="flex: 1; text-align: center;">Cancelar</a>
-            <button type="submit" class="btn btn-primary" style="flex: 2;" [disabled]="saving()">
-              {{ saving() ? 'Salvando...' : 'Salvar Alterações' }}
-            </button>
+          <!-- Chat Input -->
+          <div class="chat-input-bar">
+            @if (whatsAppStatus()?.isConnected) {
+              <input
+                type="text"
+                class="chat-text-input"
+                [placeholder]="'Enviar mensagem no WhatsApp para ' + originalLead.name + '...'"
+                [(ngModel)]="newMessage"
+                (keydown)="onKeyDown($event)"
+                [disabled]="sendingMessage()"
+              />
+              <button 
+                type="button" 
+                class="btn btn-send-whatsapp" 
+                (click)="sendWhatsAppMessage()"
+                [disabled]="!newMessage.trim() || sendingMessage()"
+              >
+                {{ sendingMessage() ? 'Enviando...' : 'Enviar' }}
+              </button>
+            } @else {
+              <div class="chat-disconnected-prompt">
+                <span>Para enviar mensagens, conecte o WhatsApp da imobiliária.</span>
+                <a routerLink="/whatsapp" class="btn btn-sm btn-outline">Conectar Agora</a>
+              </div>
+            }
           </div>
-        </form>
+        </div>
+
+      </div>
+
+      <!-- Right Column: CRM Actions -->
+      <div class="right-column">
+        <div class="card actions-card">
+          <div class="actions-header">
+            <h3>Atualizar Funil</h3>
+            <p class="helper-text">Mova o lead pelas etapas de venda</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-content">
+            
+            <div class="form-group">
+              <label for="status">Fase de Atendimento <span class="required">*</span></label>
+              <div class="select-wrapper">
+                <select id="status" formControlName="status" class="styled-select">
+                  @for (status of statuses; track status.value) {
+                    <option [value]="status.value">{{ status.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="assignedUserId">Corretor Responsável</label>
+              @if (isAdmin()) {
+                <div class="select-wrapper">
+                  <select id="assignedUserId" formControlName="assignedUserId" class="styled-select">
+                    <option value="">Sem atribuição (Fila Global)</option>
+                    @for (user of users(); track user.id) {
+                      <option [value]="user.id">{{ user.name }} ({{ user.role === 'CompanyAdmin' ? 'Gerente' : 'Corretor' }})</option>
+                    }
+                  </select>
+                </div>
+              } @else {
+                <div class="readonly-field">
+                  <span class="readonly-icon">👤</span>
+                  {{ originalLead.assignedUser?.name || 'Sem atribuição' }}
+                </div>
+                <small class="helper-text-inline">Apenas gerentes podem transferir leads.</small>
+              }
+            </div>
+
+            <div class="form-footer" style="display: flex; gap: var(--space-3); width: 100%;">
+              <a routerLink="/leads" class="btn btn-outline" style="flex: 1; text-align: center;">Cancelar</a>
+              <button type="submit" class="btn btn-primary" style="flex: 2;" [disabled]="saving()">
+                {{ saving() ? 'Salvando...' : 'Salvar Alterações' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
       
     </div>

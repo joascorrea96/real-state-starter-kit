@@ -22,4 +22,5 @@ public interface IEvolutionApiService
     Task<WhatsAppConnectDto> ConnectAsync(string instanceName);
     Task<bool> DisconnectAsync(string instanceName);
     Task<bool> SendTextMessageAsync(string instanceName, string phoneNumber, string text);
+    Task SetWebhookAsync(string instanceName, string webhookUrl);
 }

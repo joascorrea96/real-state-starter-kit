@@ -6,6 +6,7 @@ public interface ICurrentUserService
 {
     Guid UserId { get; }
     Guid CompanyId { get; }
+    string? Name { get; }
     string? Role { get; }
     bool IsAuthenticated { get; }
 }
@@ -46,5 +47,6 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
+    public string? Name => User?.FindFirstValue(ClaimTypes.Name);
     public string? Role => User?.FindFirstValue(ClaimTypes.Role);
 }

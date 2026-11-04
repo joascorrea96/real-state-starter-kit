@@ -17,6 +17,18 @@ export interface WhatsAppConnect {
   pairingCode?: string;
 }
 
+export interface WhatsAppMessage {
+  id: string;
+  leadId?: string;
+  phone: string;
+  fromMe: boolean;
+  senderName?: string;
+  messageText: string;
+  messageType?: string;
+  status: string;
+  timestamp: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WhatsAppService {
   private readonly http = inject(HttpClient);
@@ -32,5 +44,13 @@ export class WhatsAppService {
 
   disconnect(): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(`${this.baseUrl}/disconnect`, {});
+  }
+
+  getLeadMessages(leadId: string): Observable<WhatsAppMessage[]> {
+    return this.http.get<WhatsAppMessage[]>(`${this.baseUrl}/leads/${leadId}/messages`);
+  }
+
+  sendLeadMessage(leadId: string, message: string): Observable<WhatsAppMessage> {
+    return this.http.post<WhatsAppMessage>(`${this.baseUrl}/leads/${leadId}/messages`, { message });
   }
 }
