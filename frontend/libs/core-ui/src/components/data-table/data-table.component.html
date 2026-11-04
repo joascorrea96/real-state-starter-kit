@@ -34,13 +34,17 @@
         </tr>
       } @else {
         @for (row of rows; track trackRow($index, row)) {
-          <tr (click)="rowClick.emit(row)">
+          <tr (click)="onRowClick($event, row)">
             @for (column of columns; track column.key) {
               <td
                 [class.align-right]="column.align === 'right'"
                 [class.align-center]="column.align === 'center'"
               >
-                {{ cellValue(column, row) }}
+                @if (column.template) {
+                  <ng-container *ngTemplateOutlet="column.template; context: { $implicit: row, row: row }" />
+                } @else {
+                  {{ cellValue(column, row) }}
+                }
               </td>
             }
           </tr>

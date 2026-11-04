@@ -5,13 +5,55 @@
   </header>
 
   <ws-search-filter-bar placeholder="Buscar por nome, telefone ou email..." (searchChange)="onSearchChange($event)">
-    <select (change)="onStatusChange($any($event.target).value)">
+    <select (change)="onStatusFilterChange($any($event.target).value)">
       <option value="">Todos os status</option>
       @for (status of statuses; track status) {
         <option [value]="status">{{ statusLabel(status) }}</option>
       }
     </select>
   </ws-search-filter-bar>
+
+  <!-- Template para o Status em linha (Dropdown Moderno sem setinha) -->
+  <ng-template #statusTemplate let-lead="row">
+    <div class="inline-select-container" (click)="$event.stopPropagation()">
+      <select
+        class="status-pill-select status-{{ lead.status }}"
+        [value]="lead.status"
+        (change)="onStatusSelectChange(lead, $any($event.target).value)"
+        data-prevent-row-click
+        title="Clique para alterar status"
+      >
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    </div>
+  </ng-template>
+
+  <!-- Template para o Responsável em linha (Dropdown Moderno sem setinha) -->
+  <ng-template #userTemplate let-lead="row">
+    <div class="inline-select-container" (click)="$event.stopPropagation()">
+      @if (isAdmin()) {
+        <select
+          class="user-pill-select"
+          [class.unassigned]="!lead.assignedUserId"
+          [value]="lead.assignedUserId || ''"
+          (change)="onAssignedUserSelectChange(lead, $any($event.target).value)"
+          data-prevent-row-click
+          title="Clique para alterar responsável"
+        >
+          <option value="">Não atribuído</option>
+          @for (user of users(); track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      } @else {
+        <span class="user-static-label" [class.unassigned]="!lead.assignedUserId">
+          {{ lead.assignedUser?.name || 'Não atribuído' }}
+        </span>
+      }
+    </div>
+  </ng-template>
 
   <ws-data-table
     [columns]="columns"

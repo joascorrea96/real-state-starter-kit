@@ -35,6 +35,14 @@ export class DataTableComponent<T extends object> {
   @Output() sortChange = new EventEmitter<SortChange>();
   @Output() rowClick = new EventEmitter<T>();
 
+  onRowClick(event: MouseEvent, row: T): void {
+    const target = event.target as HTMLElement;
+    if (target.closest('select, button, input, a, [data-prevent-row-click]')) {
+      return;
+    }
+    this.rowClick.emit(row);
+  }
+
   onHeaderClick(column: TableColumn<T>): void {
     if (!column.sortable) return;
 
