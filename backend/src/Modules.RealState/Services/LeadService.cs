@@ -27,11 +27,34 @@ public class LeadService : GenericService<Lead>
 
         if (filters is null || filters.Count == 0) return query;
 
-        if (filters.TryGetValue("status", out var statusRaw) && Enum.TryParse<LeadStatus>(statusRaw, true, out var status))
+        if (filters.TryGetValue("status", out var statusRaw) && !string.IsNullOrWhiteSpace(statusRaw) && Enum.TryParse<LeadStatus>(statusRaw, true, out var status))
             query = query.Where(l => l.Status == status);
 
-        if (filters.TryGetValue("assignedUserId", out var assignedUserIdRaw) && Guid.TryParse(assignedUserIdRaw, out var assignedUserId))
-            query = query.Where(l => l.AssignedUserId == assignedUserId);
+        if (filters.TryGetValue("assignedUserId", out var assignedUserIdRaw) && !string.IsNullOrWhiteSpace(assignedUserIdRaw))
+        {
+            if (assignedUserIdRaw.Equals("unassigned", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(l => l.AssignedUserId == null);
+            }
+            else if (Guid.TryParse(assignedUserIdRaw, out var assignedUserId))
+            {
+                query = query.Where(l => l.AssignedUserId == assignedUserId);
+            }
+        }
+
+        if (filters.TryGetValue("startDate", out var startRaw) && !string.IsNullOrWhiteSpace(startRaw) &&
+            DateTime.TryParse(startRaw, null, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var startDate))
+        {
+            var startUtc = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            query = query.Where(l => l.CreatedAt >= startUtc);
+        }
+
+        if (filters.TryGetValue("endDate", out var endRaw) && !string.IsNullOrWhiteSpace(endRaw) &&
+            DateTime.TryParse(endRaw, null, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var endDate))
+        {
+            var endUtc = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+            query = query.Where(l => l.CreatedAt <= endUtc);
+        }
 
         return query;
     }

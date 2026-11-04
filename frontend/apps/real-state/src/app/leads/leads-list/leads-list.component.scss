@@ -21,6 +21,13 @@
   }
 }
 
+:host ::ng-deep ws-search-filter-bar {
+  input[type="date"] {
+    max-width: 145px;
+    cursor: pointer;
+  }
+}
+
 /* ========================================================
    Dropdown Customizado Moderno (Status e Responsável)
    ======================================================== */

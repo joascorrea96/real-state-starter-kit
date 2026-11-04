@@ -56,6 +56,9 @@ export class LeadsListComponent implements OnInit {
   // Controle de qual dropdown está aberto: { leadId, type: 'status' | 'user' }
   readonly activeDropdown = signal<{ leadId: string; type: 'status' | 'user' } | null>(null);
 
+  // Controle de período personalizado (datas de início e fim)
+  readonly isCustomPeriod = signal(false);
+
   columns: TableColumn<Lead>[] = [];
 
   readonly result = signal<PagedResult<Lead> | null>(null);
@@ -138,7 +141,6 @@ export class LeadsListComponent implements OnInit {
     const previousStatus = lead.status;
     lead.status = newStatus;
 
-    // Envia somente as propriedades escalares sem entidades aninhadas que causam erro no EF Core
     const payload = {
       id: lead.id,
       companyId: lead.companyId,
@@ -174,7 +176,6 @@ export class LeadsListComponent implements OnInit {
     lead.assignedUserId = targetUserId;
     lead.assignedUser = selectedUser ? { id: selectedUser.id, name: selectedUser.name } : undefined;
 
-    // Envia payload limpo sem entidades aninhadas (como assignedUser com campos parciais)
     const payload = {
       id: lead.id,
       companyId: lead.companyId,
@@ -207,7 +208,89 @@ export class LeadsListComponent implements OnInit {
   }
 
   onStatusFilterChange(value: string): void {
-    this.customFilters = { ...this.customFilters, status: value };
+    if (value) {
+      this.customFilters = { ...this.customFilters, status: value };
+    } else {
+      const { status, ...rest } = this.customFilters;
+      this.customFilters = rest;
+    }
+    this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
+    this.fetch();
+  }
+
+  onUserFilterChange(userId: string): void {
+    if (userId) {
+      this.customFilters = { ...this.customFilters, assignedUserId: userId };
+    } else {
+      const { assignedUserId, ...rest } = this.customFilters;
+      this.customFilters = rest;
+    }
+    this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
+    this.fetch();
+  }
+
+  onPeriodSelectChange(period: string): void {
+    const { startDate, endDate, ...rest } = this.customFilters;
+    this.customFilters = rest;
+
+    if (period === 'custom') {
+      this.isCustomPeriod.set(true);
+      return;
+    }
+
+    this.isCustomPeriod.set(false);
+    const now = new Date();
+
+    if (period === 'today') {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      this.customFilters = { ...this.customFilters, startDate: start.toISOString(), endDate: end.toISOString() };
+    } else if (period === 'yesterday') {
+      const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      const start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
+      const end = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
+      this.customFilters = { ...this.customFilters, startDate: start.toISOString(), endDate: end.toISOString() };
+    } else if (period === 'last7days') {
+      const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      start.setHours(0, 0, 0, 0);
+      this.customFilters = { ...this.customFilters, startDate: start.toISOString() };
+    } else if (period === 'last30days') {
+      const start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      start.setHours(0, 0, 0, 0);
+      this.customFilters = { ...this.customFilters, startDate: start.toISOString() };
+    } else if (period === 'thisMonth') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      this.customFilters = { ...this.customFilters, startDate: start.toISOString() };
+    } else if (period === 'lastMonth') {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      this.customFilters = { ...this.customFilters, startDate: start.toISOString(), endDate: end.toISOString() };
+    }
+
+    this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
+    this.fetch();
+  }
+
+  onCustomStartDateChange(dateStr: string): void {
+    if (dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      this.customFilters = { ...this.customFilters, startDate: d.toISOString() };
+    } else {
+      const { startDate, ...rest } = this.customFilters;
+      this.customFilters = rest;
+    }
+    this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
+    this.fetch();
+  }
+
+  onCustomEndDateChange(dateStr: string): void {
+    if (dateStr) {
+      const d = new Date(dateStr + 'T23:59:59.999');
+      this.customFilters = { ...this.customFilters, endDate: d.toISOString() };
+    } else {
+      const { endDate, ...rest } = this.customFilters;
+      this.customFilters = rest;
+    }
     this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
     this.fetch();
   }

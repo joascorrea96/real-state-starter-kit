@@ -5,12 +5,38 @@
   </header>
 
   <ws-search-filter-bar placeholder="Buscar por nome, telefone ou email..." (searchChange)="onSearchChange($event)">
-    <select (change)="onStatusFilterChange($any($event.target).value)">
+    <select (change)="onStatusFilterChange($any($event.target).value)" title="Filtrar por status">
       <option value="">Todos os status</option>
       @for (status of statuses; track status) {
         <option [value]="status">{{ statusLabel(status) }}</option>
       }
     </select>
+
+    @if (isAdmin()) {
+      <select (change)="onUserFilterChange($any($event.target).value)" title="Filtrar por responsável">
+        <option value="">Todos os responsáveis</option>
+        <option value="unassigned">Não atribuído</option>
+        @for (user of users(); track user.id) {
+          <option [value]="user.id">{{ user.name }}</option>
+        }
+      </select>
+    }
+
+    <select (change)="onPeriodSelectChange($any($event.target).value)" title="Filtrar por período">
+      <option value="">Todo o período</option>
+      <option value="today">Hoje</option>
+      <option value="yesterday">Ontem</option>
+      <option value="last7days">Últimos 7 dias</option>
+      <option value="last30days">Últimos 30 dias</option>
+      <option value="thisMonth">Este mês</option>
+      <option value="lastMonth">Mês anterior</option>
+      <option value="custom">Personalizado...</option>
+    </select>
+
+    @if (isCustomPeriod()) {
+      <input type="date" (change)="onCustomStartDateChange($any($event.target).value)" title="Data inicial" />
+      <input type="date" (change)="onCustomEndDateChange($any($event.target).value)" title="Data final" />
+    }
   </ws-search-filter-bar>
 
   <!-- Template para o Status em linha (Dropdown Moderno Customizado com Setinha Sutil) -->
