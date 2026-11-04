@@ -13,12 +13,25 @@
   } @else {
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="property-form">
       
+      <div class="form-requirement-hint">
+        <span class="required">*</span> Indica campos de preenchimento obrigatório
+      </div>
+
       <section class="form-section">
         <h3>Informações Básicas</h3>
         <div class="form-row">
           <div class="form-group full-width">
-            <label for="title">Título do Anúncio</label>
-            <input id="title" type="text" formControlName="title" placeholder="Ex: Apartamento incrível no Centro" />
+            <label for="title">Título do Anúncio <span class="required">*</span></label>
+            <input 
+              id="title" 
+              type="text" 
+              formControlName="title" 
+              placeholder="Ex: Apartamento incrível no Centro" 
+              [class.is-invalid]="form.get('title')?.invalid && form.get('title')?.touched"
+            />
+            @if (form.get('title')?.invalid && form.get('title')?.touched) {
+              <small class="error-text">O título do anúncio é obrigatório.</small>
+            }
           </div>
         </div>
         <div class="form-row">
@@ -29,7 +42,7 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="type">Tipo de Imóvel</label>
+            <label for="type">Tipo de Imóvel <span class="required">*</span></label>
             <select id="type" formControlName="type">
               @for (type of propertyTypes; track type.value) {
                 <option [value]="type.value">{{ type.label }}</option>
@@ -37,7 +50,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="listingType">Venda/Aluguel</label>
+            <label for="listingType">Venda/Aluguel <span class="required">*</span></label>
             <select id="listingType" formControlName="listingType">
               @for (type of listingTypes; track type.value) {
                 <option [value]="type.value">{{ type.label }}</option>
@@ -45,7 +58,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="status">Status Comercial</label>
+            <label for="status">Status Comercial <span class="required">*</span></label>
             <select id="status" formControlName="status">
               @for (s of propertyStatuses; track s.value) {
                 <option [value]="s.value">{{ s.label }}</option>
@@ -59,8 +72,20 @@
         <h3>Valores</h3>
         <div class="form-row">
           <div class="form-group">
-            <label for="price">Preço (R$)</label>
-            <input id="price" type="text" formControlName="price" mask="separator.2" thousandSeparator="." decimalMarker="," prefix="R$ " />
+            <label for="price">Preço (R$) <span class="required">*</span></label>
+            <input 
+              id="price" 
+              type="text" 
+              formControlName="price" 
+              mask="separator.2" 
+              thousandSeparator="." 
+              decimalMarker="," 
+              prefix="R$ " 
+              [class.is-invalid]="form.get('price')?.invalid && form.get('price')?.touched"
+            />
+            @if (form.get('price')?.invalid && form.get('price')?.touched) {
+              <small class="error-text">Informe o preço do imóvel.</small>
+            }
           </div>
           <div class="form-group">
             <label for="condoFee">Condomínio (R$)</label>
@@ -73,8 +98,17 @@
         <h3>Especificações</h3>
         <div class="form-row">
           <div class="form-group">
-            <label for="areaSqm">Área (m²)</label>
-            <input id="areaSqm" type="text" formControlName="areaSqm" mask="0*" />
+            <label for="areaSqm">Área (m²) <span class="required">*</span></label>
+            <input 
+              id="areaSqm" 
+              type="text" 
+              formControlName="areaSqm" 
+              mask="0*" 
+              [class.is-invalid]="form.get('areaSqm')?.invalid && form.get('areaSqm')?.touched"
+            />
+            @if (form.get('areaSqm')?.invalid && form.get('areaSqm')?.touched) {
+              <small class="error-text">A área é obrigatória e deve ser maior que 0 m².</small>
+            }
           </div>
           <div class="form-group">
             <label for="bedrooms">Quartos</label>
@@ -95,26 +129,69 @@
         <h3>Endereço</h3>
         <div class="form-row">
           <div class="form-group full-width">
-            <label for="address">Logradouro (Rua, Av, etc)</label>
-            <input id="address" type="text" formControlName="address" />
+            <label for="address">Logradouro (Rua, Av, etc) <span class="required">*</span></label>
+            <input 
+              id="address" 
+              type="text" 
+              formControlName="address" 
+              placeholder="Ex: Rua das Flores, 123"
+              [class.is-invalid]="form.get('address')?.invalid && form.get('address')?.touched"
+            />
+            @if (form.get('address')?.invalid && form.get('address')?.touched) {
+              <small class="error-text">O endereço é obrigatório.</small>
+            }
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="neighborhood">Bairro</label>
-            <input id="neighborhood" type="text" formControlName="neighborhood" />
+            <label for="neighborhood">Bairro <span class="required">*</span></label>
+            <input 
+              id="neighborhood" 
+              type="text" 
+              formControlName="neighborhood" 
+              [class.is-invalid]="form.get('neighborhood')?.invalid && form.get('neighborhood')?.touched"
+            />
+            @if (form.get('neighborhood')?.invalid && form.get('neighborhood')?.touched) {
+              <small class="error-text">O bairro é obrigatório.</small>
+            }
           </div>
           <div class="form-group">
-            <label for="city">Cidade</label>
-            <input id="city" type="text" formControlName="city" />
+            <label for="city">Cidade <span class="required">*</span></label>
+            <input 
+              id="city" 
+              type="text" 
+              formControlName="city" 
+              [class.is-invalid]="form.get('city')?.invalid && form.get('city')?.touched"
+            />
+            @if (form.get('city')?.invalid && form.get('city')?.touched) {
+              <small class="error-text">A cidade é obrigatória.</small>
+            }
           </div>
           <div class="form-group">
-            <label for="state">Estado (UF)</label>
-            <input id="state" type="text" formControlName="state" />
+            <label for="state">Estado (UF) <span class="required">*</span></label>
+            <input 
+              id="state" 
+              type="text" 
+              formControlName="state" 
+              placeholder="Ex: SC"
+              [class.is-invalid]="form.get('state')?.invalid && form.get('state')?.touched"
+            />
+            @if (form.get('state')?.invalid && form.get('state')?.touched) {
+              <small class="error-text">O estado é obrigatório.</small>
+            }
           </div>
           <div class="form-group">
-            <label for="zipCode">CEP</label>
-            <input id="zipCode" type="text" formControlName="zipCode" mask="00000-000" />
+            <label for="zipCode">CEP <span class="required">*</span></label>
+            <input 
+              id="zipCode" 
+              type="text" 
+              formControlName="zipCode" 
+              mask="00000-000" 
+              [class.is-invalid]="form.get('zipCode')?.invalid && form.get('zipCode')?.touched"
+            />
+            @if (form.get('zipCode')?.invalid && form.get('zipCode')?.touched) {
+              <small class="error-text">O CEP é obrigatório.</small>
+            }
           </div>
         </div>
       </section>
@@ -171,6 +248,13 @@
         </div>
       </section>
 
+      @if (form.invalid && form.touched) {
+        <div class="form-invalid-banner">
+          <span>⚠️</span>
+          <span>Por favor, preencha todos os campos obrigatórios destacados em vermelho para salvar o imóvel.</span>
+        </div>
+      }
+
       <div class="form-actions" style="display: flex; justify-content: space-between;">
         <div>
           @if (isEditing()) {
@@ -179,7 +263,7 @@
         </div>
         <div style="display: flex; gap: var(--space-3);">
           <a class="btn btn-outline" routerLink="/properties" [class.disabled]="saving()">Cancelar</a>
-          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving()">
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
             {{ saving() ? 'Salvando...' : 'Salvar Imóvel' }}
           </button>
         </div>

@@ -96,15 +96,25 @@ export class LeadFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.form.invalid || !this.originalLead) {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    if (!this.originalLead) {
       return;
     }
 
     this.saving.set(true);
 
-    const formValue = this.form.getRawValue(); // getRawValue to get disabled fields too
-    const leadData: Partial<Lead> = {
-      ...this.originalLead,
+    const formValue = this.form.getRawValue();
+    const leadData = {
+      id: this.originalLead.id,
+      companyId: this.originalLead.companyId,
+      name: this.originalLead.name,
+      phone: this.originalLead.phone,
+      email: this.originalLead.email,
+      message: this.originalLead.message,
+      propertyId: this.originalLead.propertyId,
       status: formValue.status,
       assignedUserId: formValue.assignedUserId || null,
     };

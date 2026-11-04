@@ -76,6 +76,15 @@ export class UserFormComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      setTimeout(() => {
+        const firstInvalid = document.querySelector<HTMLElement>(
+          'form input.is-invalid, form select.is-invalid, form .ng-invalid:not(form)'
+        );
+        if (firstInvalid) {
+          firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstInvalid.focus();
+        }
+      }, 50);
       return;
     }
 
