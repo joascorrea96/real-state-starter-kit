@@ -71,7 +71,15 @@ public class LeadsController : ControllerBase
         var existing = await _service.GetByIdAsync(id);
         if (existing is null) return NotFound();
 
-        await _service.UpdateAsync(lead);
+        // Update scalar fields on tracked entity to prevent EF navigation tracking errors
+        existing.Status = lead.Status;
+        existing.AssignedUserId = lead.AssignedUserId;
+        if (!string.IsNullOrWhiteSpace(lead.Name)) existing.Name = lead.Name;
+        if (!string.IsNullOrWhiteSpace(lead.Phone)) existing.Phone = lead.Phone;
+        existing.Email = lead.Email;
+        existing.Message = lead.Message;
+
+        await _service.UpdateAsync(existing);
         return NoContent();
     }
 

@@ -21,113 +21,137 @@
   }
 }
 
-.inline-select-container {
+/* ========================================================
+   Dropdown Customizado Moderno (Status e Responsável)
+   ======================================================== */
+.custom-dropdown {
+  position: relative;
   display: inline-flex;
   align-items: center;
 }
 
-/* ========================================================
-   Dropdown Moderno sem setinha para Status (Pill Badge)
-   ======================================================== */
-.status-pill-select {
+.dropdown-trigger-pill {
   appearance: none;
   -webkit-appearance: none;
-  -moz-appearance: none;
   border: 1px solid transparent;
   outline: none;
   cursor: pointer;
-  padding: 5px 14px;
+  padding: 4px 10px 4px 12px;
   border-radius: 9999px;
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.3;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   transition: all 0.15s ease-in-out;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  background-image: none !important;
+  background: #ffffff;
 
   &:hover {
-    filter: brightness(0.94);
+    filter: brightness(0.96);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
   }
 
-  &:focus {
+  &.menu-open {
     box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.25);
-  }
-
-  /* Cores modernas para cada status */
-  &.status-New {
-    background-color: #dbeafe;
-    color: #1e40af;
-    border-color: #bfdbfe;
-  }
-
-  &.status-Contacted {
-    background-color: #fef3c7;
-    color: #92400e;
-    border-color: #fde68a;
-  }
-
-  &.status-Qualified {
-    background-color: #f3e8ff;
-    color: #6b21a8;
-    border-color: #e9d5ff;
-  }
-
-  &.status-Converted {
-    background-color: #dcfce7;
-    color: #166534;
-    border-color: #bbf7d0;
-  }
-
-  &.status-Lost {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border-color: #fecaca;
-  }
-
-  option {
-    background: #ffffff;
-    color: #1c1f1c;
-    font-weight: 500;
-    padding: 6px 10px;
   }
 }
 
-/* ========================================================
-   Dropdown Moderno sem setinha para Responsável (User Chip)
-   ======================================================== */
-.user-pill-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+/* Setinha sutil (Chevron) */
+.chevron-icon {
+  width: 13px;
+  height: 13px;
+  opacity: 0.65;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+/* Ponto colorido de status */
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+
+  &.dot-New {
+    background-color: #2563eb;
+  }
+  &.dot-Contacted {
+    background-color: #d97706;
+  }
+  &.dot-Qualified {
+    background-color: #9333ea;
+  }
+  &.dot-Converted {
+    background-color: #16a34a;
+  }
+  &.dot-Lost {
+    background-color: #dc2626;
+  }
+}
+
+/* Cores modernas para a pílula de Status */
+.status-pill {
+  &.status-New {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+    .chevron-icon { color: #1d4ed8; }
+  }
+
+  &.status-Contacted {
+    background-color: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+    .chevron-icon { color: #b45309; }
+  }
+
+  &.status-Qualified {
+    background-color: #faf5ff;
+    color: #7e22ce;
+    border-color: #e9d5ff;
+    .chevron-icon { color: #7e22ce; }
+  }
+
+  &.status-Converted {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+    .chevron-icon { color: #15803d; }
+  }
+
+  &.status-Lost {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+    .chevron-icon { color: #b91c1c; }
+  }
+}
+
+/* Pílula de Responsável */
+.user-pill {
   border: 1px solid var(--color-border);
-  outline: none;
-  cursor: pointer;
-  padding: 5px 14px;
-  border-radius: 9999px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
   color: var(--color-ink);
   background-color: var(--color-surface);
-  transition: all 0.15s ease-in-out;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  background-image: none !important;
-  max-width: 180px;
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 200px;
+
+  .chevron-icon {
+    color: var(--color-ink-muted);
+  }
 
   &:hover {
     border-color: var(--color-accent);
     background-color: var(--color-surface-sunken);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  }
-
-  &:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.2);
   }
 
   &.unassigned {
@@ -142,14 +166,31 @@
       background-color: rgba(47, 93, 80, 0.04);
     }
   }
+}
 
-  option {
-    background: #ffffff;
-    color: #1c1f1c;
-    font-weight: 500;
-    font-style: normal;
-    padding: 6px 10px;
+.user-avatar-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  &.unassigned-dot {
+    background: #f1f5f9;
+    color: #94a3b8;
   }
+}
+
+.pill-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-static-label {
@@ -162,4 +203,87 @@
     color: var(--color-ink-muted);
     font-style: italic;
   }
+}
+
+/* ========================================================
+   Menu Flutuante Moderno (Dropdown Card)
+   ======================================================== */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 1000;
+  min-width: 180px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdownPop 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+@keyframes dropdownPop {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  transition: all 0.12s ease;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
+
+  &.is-selected {
+    font-weight: 600;
+    background-color: #f8fafc;
+  }
+
+  .item-text {
+    flex: 1;
+    white-space: nowrap;
+
+    &.text-muted {
+      color: var(--color-ink-muted);
+      font-style: italic;
+    }
+  }
+}
+
+.check-icon {
+  width: 14px;
+  height: 14px;
+  margin-left: auto;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+/* Dá espaço vertical suficiente para que o dropdown flutuante nunca seja cortado em tabelas curtas */
+:host ::ng-deep ws-data-table .table-wrapper {
+  min-height: 340px;
 }

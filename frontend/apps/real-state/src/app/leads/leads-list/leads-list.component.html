@@ -13,40 +13,104 @@
     </select>
   </ws-search-filter-bar>
 
-  <!-- Template para o Status em linha (Dropdown Moderno sem setinha) -->
+  <!-- Template para o Status em linha (Dropdown Moderno Customizado com Setinha Sutil) -->
   <ng-template #statusTemplate let-lead="row">
-    <div class="inline-select-container" (click)="$event.stopPropagation()">
-      <select
-        class="status-pill-select status-{{ lead.status }}"
-        [value]="lead.status"
-        (change)="onStatusSelectChange(lead, $any($event.target).value)"
+    <div class="custom-dropdown" (click)="$event.stopPropagation()">
+      <button
+        type="button"
+        class="dropdown-trigger-pill status-pill status-{{ lead.status }}"
+        [class.menu-open]="isDropdownOpen(lead.id, 'status')"
+        (click)="toggleDropdown(lead.id, 'status', $event)"
         data-prevent-row-click
         title="Clique para alterar status"
       >
-        @for (status of statuses; track status) {
-          <option [value]="status">{{ statusLabel(status) }}</option>
-        }
-      </select>
+        <span class="status-dot dot-{{ lead.status }}"></span>
+        <span class="pill-text">{{ statusLabel(lead.status) }}</span>
+        <svg class="chevron-icon" [class.rotated]="isDropdownOpen(lead.id, 'status')" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+        </svg>
+      </button>
+
+      @if (isDropdownOpen(lead.id, 'status')) {
+        <div class="dropdown-menu status-menu" data-prevent-row-click>
+          @for (status of statuses; track status) {
+            <button
+              type="button"
+              class="dropdown-menu-item"
+              [class.is-selected]="lead.status === status"
+              (click)="onSelectStatus(lead, status, $event)"
+            >
+              <span class="status-dot dot-{{ status }}"></span>
+              <span class="item-text">{{ statusLabel(status) }}</span>
+              @if (lead.status === status) {
+                <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              }
+            </button>
+          }
+        </div>
+      }
     </div>
   </ng-template>
 
-  <!-- Template para o Responsável em linha (Dropdown Moderno sem setinha) -->
+  <!-- Template para o Responsável em linha (Dropdown Moderno Customizado com Setinha Sutil) -->
   <ng-template #userTemplate let-lead="row">
-    <div class="inline-select-container" (click)="$event.stopPropagation()">
+    <div class="custom-dropdown" (click)="$event.stopPropagation()">
       @if (isAdmin()) {
-        <select
-          class="user-pill-select"
+        <button
+          type="button"
+          class="dropdown-trigger-pill user-pill"
           [class.unassigned]="!lead.assignedUserId"
-          [value]="lead.assignedUserId || ''"
-          (change)="onAssignedUserSelectChange(lead, $any($event.target).value)"
+          [class.menu-open]="isDropdownOpen(lead.id, 'user')"
+          (click)="toggleDropdown(lead.id, 'user', $event)"
           data-prevent-row-click
           title="Clique para alterar responsável"
         >
-          <option value="">Não atribuído</option>
-          @for (user of users(); track user.id) {
-            <option [value]="user.id">{{ user.name }}</option>
+          @if (lead.assignedUser?.name) {
+            <span class="user-avatar-dot">{{ lead.assignedUser.name.charAt(0).toUpperCase() }}</span>
           }
-        </select>
+          <span class="pill-text">{{ lead.assignedUser?.name || 'Não atribuído' }}</span>
+          <svg class="chevron-icon" [class.rotated]="isDropdownOpen(lead.id, 'user')" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        @if (isDropdownOpen(lead.id, 'user')) {
+          <div class="dropdown-menu user-menu" data-prevent-row-click>
+            <button
+              type="button"
+              class="dropdown-menu-item"
+              [class.is-selected]="!lead.assignedUserId"
+              (click)="onSelectUser(lead, null, $event)"
+            >
+              <span class="user-avatar-dot unassigned-dot">-</span>
+              <span class="item-text text-muted">Não atribuído</span>
+              @if (!lead.assignedUserId) {
+                <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+              }
+            </button>
+
+            @for (user of users(); track user.id) {
+              <button
+                type="button"
+                class="dropdown-menu-item"
+                [class.is-selected]="lead.assignedUserId === user.id"
+                (click)="onSelectUser(lead, user.id, $event)"
+              >
+                <span class="user-avatar-dot">{{ user.name.charAt(0).toUpperCase() }}</span>
+                <span class="item-text">{{ user.name }}</span>
+                @if (lead.assignedUserId === user.id) {
+                  <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                }
+              </button>
+            }
+          </div>
+        }
       } @else {
         <span class="user-static-label" [class.unassigned]="!lead.assignedUserId">
           {{ lead.assignedUser?.name || 'Não atribuído' }}

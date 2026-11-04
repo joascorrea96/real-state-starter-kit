@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, TemplateRef, ViewChild, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, TemplateRef, ViewChild, inject, signal } from '@angular/core';
 import {
   DEFAULT_PAGINATION_FILTER,
   Lead,
@@ -48,10 +48,13 @@ export class LeadsListComponent implements OnInit {
   @ViewChild('userTemplate', { static: true }) userTemplate!: TemplateRef<any>;
 
   readonly statuses = Object.values(LeadStatus);
-  readonly statusLabel = (status: LeadStatus) => STATUS_LABELS[status];
+  readonly statusLabel = (status: LeadStatus) => STATUS_LABELS[status] || status;
 
   readonly users = signal<User[]>([]);
   readonly isAdmin = signal(false);
+
+  // Controle de qual dropdown está aberto: { leadId, type: 'status' | 'user' }
+  readonly activeDropdown = signal<{ leadId: string; type: 'status' | 'user' } | null>(null);
 
   columns: TableColumn<Lead>[] = [];
 
@@ -102,6 +105,98 @@ export class LeadsListComponent implements OnInit {
     });
   }
 
+  toggleDropdown(leadId: string, type: 'status' | 'user', event: MouseEvent): void {
+    event.stopPropagation();
+    const current = this.activeDropdown();
+    if (current?.leadId === leadId && current?.type === type) {
+      this.activeDropdown.set(null);
+    } else {
+      this.activeDropdown.set({ leadId, type });
+    }
+  }
+
+  isDropdownOpen(leadId: string, type: 'status' | 'user'): boolean {
+    const current = this.activeDropdown();
+    return current?.leadId === leadId && current?.type === type;
+  }
+
+  closeDropdowns(): void {
+    this.activeDropdown.set(null);
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeDropdowns();
+  }
+
+  onSelectStatus(lead: Lead, newStatus: LeadStatus, event: MouseEvent): void {
+    event.stopPropagation();
+    this.closeDropdowns();
+
+    if (lead.status === newStatus) return;
+
+    const previousStatus = lead.status;
+    lead.status = newStatus;
+
+    // Envia somente as propriedades escalares sem entidades aninhadas que causam erro no EF Core
+    const payload = {
+      id: lead.id,
+      companyId: lead.companyId,
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      message: lead.message,
+      propertyId: lead.propertyId,
+      status: newStatus,
+      assignedUserId: lead.assignedUserId,
+    };
+
+    this.leadService.update(lead.id, payload as any).subscribe({
+      error: (err) => {
+        console.error('Erro ao atualizar status', err);
+        lead.status = previousStatus;
+        alert('Erro ao atualizar status do lead.');
+      },
+    });
+  }
+
+  onSelectUser(lead: Lead, newUserId: string | null, event: MouseEvent): void {
+    event.stopPropagation();
+    this.closeDropdowns();
+
+    const targetUserId = newUserId || undefined;
+    if (lead.assignedUserId === targetUserId) return;
+
+    const previousAssignedUserId = lead.assignedUserId;
+    const previousAssignedUser = lead.assignedUser;
+
+    const selectedUser = this.users().find((u) => u.id === targetUserId);
+    lead.assignedUserId = targetUserId;
+    lead.assignedUser = selectedUser ? { id: selectedUser.id, name: selectedUser.name } : undefined;
+
+    // Envia payload limpo sem entidades aninhadas (como assignedUser com campos parciais)
+    const payload = {
+      id: lead.id,
+      companyId: lead.companyId,
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      message: lead.message,
+      propertyId: lead.propertyId,
+      status: lead.status,
+      assignedUserId: targetUserId ?? null,
+    };
+
+    this.leadService.update(lead.id, payload as any).subscribe({
+      error: (err) => {
+        console.error('Erro ao atualizar responsável', err);
+        lead.assignedUserId = previousAssignedUserId;
+        lead.assignedUser = previousAssignedUser;
+        alert('Erro ao atualizar responsável do lead.');
+      },
+    });
+  }
+
   onRowClick(lead: Lead): void {
     this.router.navigate(['/leads', lead.id, 'edit']);
   }
@@ -115,49 +210,6 @@ export class LeadsListComponent implements OnInit {
     this.customFilters = { ...this.customFilters, status: value };
     this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
     this.fetch();
-  }
-
-  onStatusSelectChange(lead: Lead, newStatus: string): void {
-    const status = newStatus as LeadStatus;
-    if (lead.status === status) return;
-
-    const previousStatus = lead.status;
-    lead.status = status;
-
-    this.leadService.update(lead.id, {
-      ...lead,
-      status: status,
-    }).subscribe({
-      error: (err) => {
-        console.error('Erro ao atualizar status', err);
-        lead.status = previousStatus;
-        alert('Erro ao atualizar status do lead.');
-      },
-    });
-  }
-
-  onAssignedUserSelectChange(lead: Lead, newUserId: string): void {
-    const assignedUserId = newUserId ? newUserId : null;
-    if (lead.assignedUserId === assignedUserId) return;
-
-    const previousAssignedUserId = lead.assignedUserId;
-    const previousAssignedUser = lead.assignedUser;
-
-    const selectedUser = this.users().find((u) => u.id === assignedUserId);
-    lead.assignedUserId = assignedUserId ?? undefined;
-    lead.assignedUser = selectedUser ? { id: selectedUser.id, name: selectedUser.name } : undefined;
-
-    this.leadService.update(lead.id, {
-      ...lead,
-      assignedUserId: assignedUserId ?? undefined,
-    }).subscribe({
-      error: (err) => {
-        console.error('Erro ao atualizar responsável', err);
-        lead.assignedUserId = previousAssignedUserId;
-        lead.assignedUser = previousAssignedUser;
-        alert('Erro ao atualizar responsável do lead.');
-      },
-    });
   }
 
   onSortChange(sort: SortChange): void {
