@@ -29,6 +29,18 @@ export interface WhatsAppMessage {
   timestamp: string;
 }
 
+export interface WhatsAppConversation {
+  phone: string;
+  contactName: string;
+  leadId?: string;
+  leadStatus?: string;
+  propertyTitle?: string;
+  lastMessage: string;
+  lastMessageTimestamp: string;
+  lastMessageFromMe: boolean;
+  totalMessages: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WhatsAppService {
   private readonly http = inject(HttpClient);
@@ -52,5 +64,17 @@ export class WhatsAppService {
 
   sendLeadMessage(leadId: string, message: string): Observable<WhatsAppMessage> {
     return this.http.post<WhatsAppMessage>(`${this.baseUrl}/leads/${leadId}/messages`, { message });
+  }
+
+  getConversations(): Observable<WhatsAppConversation[]> {
+    return this.http.get<WhatsAppConversation[]>(`${this.baseUrl}/conversations`);
+  }
+
+  getConversationMessages(phone: string): Observable<WhatsAppMessage[]> {
+    return this.http.get<WhatsAppMessage[]>(`${this.baseUrl}/conversations/${encodeURIComponent(phone)}/messages`);
+  }
+
+  sendConversationMessage(phone: string, message: string): Observable<WhatsAppMessage> {
+    return this.http.post<WhatsAppMessage>(`${this.baseUrl}/conversations/${encodeURIComponent(phone)}/messages`, { message });
   }
 }

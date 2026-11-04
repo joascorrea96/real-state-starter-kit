@@ -1,8 +1,39 @@
-<div class="page">
+<div class="page full-page">
   <header class="page-header">
-    <div>
-      <h1>Integração com WhatsApp</h1>
-      <p class="subtitle">Conecte o número de WhatsApp da sua imobiliária para centralizar conversas e atendimentos</p>
+    <div class="header-main">
+      <div>
+        <h1>Central do WhatsApp</h1>
+        <p class="subtitle">Acompanhe e responda todas as conversas da imobiliária em tempo real</p>
+      </div>
+
+      <!-- Tabs de navegação superior -->
+      @if (status()?.isConnected) {
+        <div class="tab-pills">
+          <button 
+            type="button" 
+            class="tab-pill" 
+            [class.active]="activeTab() === 'conversations'"
+            (click)="setTab('conversations')"
+          >
+            <span class="tab-icon">💬</span>
+            <span>Conversas Recentes</span>
+            @if (conversations().length > 0) {
+              <span class="count-badge">{{ conversations().length }}</span>
+            }
+          </button>
+          
+          <button 
+            type="button" 
+            class="tab-pill" 
+            [class.active]="activeTab() === 'connection'"
+            (click)="setTab('connection')"
+          >
+            <span class="tab-icon">⚙️</span>
+            <span>Conexão: {{ formatPhone(status()?.phoneNumber) }}</span>
+            <span class="online-dot" title="Online"></span>
+          </button>
+        </div>
+      }
     </div>
   </header>
 
@@ -13,150 +44,306 @@
     </div>
   } @else {
 
-    <!-- ESTADO 1: CONECTADO COM SUCESSO -->
-    @if (status()?.isConnected) {
-      <div class="card status-card connected-card">
-        <div class="card-top">
-          <div class="status-indicator-badge success">
-            <span class="pulsing-dot"></span>
-            <span>WhatsApp Conectado e Ativo</span>
+    <!-- ========================================================
+         ABA 1: CENTRAL DE CONVERSAS (WHATSAPP INBOX)
+         ======================================================== -->
+    @if (activeTab() === 'conversations' && status()?.isConnected) {
+      <div class="inbox-container card">
+        
+        <!-- Painel Esquerdo: Lista de Conversas -->
+        <div class="conversations-sidebar">
+          <div class="sidebar-header">
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input 
+                type="text" 
+                class="search-input" 
+                placeholder="Buscar conversa ou mensagem..." 
+                [(ngModel)]="searchQuery"
+              />
+              @if (searchQuery) {
+                <button type="button" class="clear-search-btn" (click)="searchQuery = ''">✕</button>
+              }
+            </div>
           </div>
-        </div>
 
-        <div class="profile-hero">
-          <div class="avatar-container">
-            @if (status()?.profilePictureUrl) {
-              <img [src]="status()!.profilePictureUrl!" alt="Foto do Perfil" class="profile-img" />
+          <div class="conversations-list">
+            @if (filteredConversations.length === 0) {
+              <div class="empty-conversations">
+                <span class="empty-icon">💬</span>
+                <p>Nenhuma conversa encontrada</p>
+                <small>Mensagens enviadas ou recebidas pelos leads aparecerão aqui automaticamente.</small>
+              </div>
             } @else {
-              <div class="profile-avatar-fallback">📱</div>
+              @for (conv of filteredConversations; track conv.phone) {
+                <div 
+                  class="conversation-item" 
+                  [class.active]="selectedConversation()?.phone === conv.phone"
+                  (click)="selectConversation(conv)"
+                >
+                  <div class="conv-avatar">
+                    {{ conv.contactName.substring(0, 1).toUpperCase() }}
+                  </div>
+
+                  <div class="conv-body">
+                    <div class="conv-top">
+                      <h4 class="conv-name" [title]="conv.contactName">{{ conv.contactName }}</h4>
+                      <span class="conv-time">{{ formatTime(conv.lastMessageTimestamp) }}</span>
+                    </div>
+
+                    <div class="conv-preview">
+                      @if (conv.lastMessageFromMe) {
+                        <span class="check-sent">✓✓</span>
+                      }
+                      <span class="last-text">{{ conv.lastMessage || 'Nenhuma mensagem' }}</span>
+                    </div>
+
+                    @if (conv.leadId) {
+                      <div class="conv-meta-pills">
+                        <span class="lead-badge">Lead CRM</span>
+                        @if (conv.propertyTitle) {
+                          <span class="property-badge" [title]="conv.propertyTitle">🏠 {{ conv.propertyTitle }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             }
           </div>
-          <div class="profile-meta">
-            <h2>{{ status()?.profileName || 'WhatsApp da Imobiliária' }}</h2>
-            <p class="phone-number">{{ formatPhone(status()?.phoneNumber) }}</p>
-          </div>
         </div>
 
-        <div class="benefits-panel">
-          <h3>Recursos Ativos nesta Conexão:</h3>
-          <ul class="benefits-list">
-            <li>
-              <span class="check-icon">✓</span>
-              <span><strong>Histórico em tempo real:</strong> Mensagens trocadas são sincronizadas na ficha de cada lead.</span>
-            </li>
-            <li>
-              <span class="check-icon">✓</span>
-              <span><strong>Respostas pelo CRM:</strong> Seus corretores podem responder clientes diretamente pelo painel administrativo.</span>
-            </li>
-            <li>
-              <span class="check-icon">✓</span>
-              <span><strong>Segurança da carteira:</strong> O histórico de negociações fica seguro na imobiliária, mesmo se corretores mudarem.</span>
-            </li>
-          </ul>
-        </div>
+        <!-- Painel Direito: Chat Aberto -->
+        <div class="chat-main-panel">
+          @if (selectedConversation(); as conv) {
+            
+            <!-- Topo do Chat -->
+            <div class="chat-top-bar">
+              <div class="chat-target-info">
+                <div class="target-avatar">
+                  {{ conv.contactName.substring(0, 1).toUpperCase() }}
+                </div>
+                <div>
+                  <h3 class="target-name">{{ conv.contactName }}</h3>
+                  <p class="target-phone">{{ formatPhone(conv.phone) }}</p>
+                </div>
+              </div>
 
-        <div class="card-footer">
-          <button 
-            type="button" 
-            class="btn btn-outline-danger" 
-            (click)="disconnect()" 
-            [disabled]="actionLoading()"
-          >
-            {{ actionLoading() ? 'Desconectando...' : 'Desconectar este WhatsApp' }}
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- ESTADO 2: CONECTANDO (EXIBINDO QR CODE) -->
-    @else if (connecting() && qrCode()) {
-      <div class="card qr-card">
-        <div class="qr-header">
-          <div class="status-indicator-badge warning">
-            <span class="pulsing-dot warning"></span>
-            <span>Aguardando leitura do QR Code</span>
-          </div>
-          <h2>Conecte seu WhatsApp</h2>
-          <p class="qr-subtitle">Abra o WhatsApp no celular e aponte a câmera para o código abaixo</p>
-        </div>
-
-        <div class="qr-content">
-          <div class="qr-instructions">
-            <ol>
-              <li>
-                <span class="step-num">1</span>
-                <div>Abra o aplicativo do <strong>WhatsApp</strong> no seu celular.</div>
-              </li>
-              <li>
-                <span class="step-num">2</span>
-                <div>Toque em <strong>Configurações</strong> (no iPhone) ou nos <strong>três pontinhos</strong> (no Android).</div>
-              </li>
-              <li>
-                <span class="step-num">3</span>
-                <div>Selecione a opção <strong>Aparelhos conectados</strong>.</div>
-              </li>
-              <li>
-                <span class="step-num">4</span>
-                <div>Toque em <strong>Conectar um aparelho</strong> e aponte a câmera para esta tela:</div>
-              </li>
-            </ol>
-          </div>
-
-          <div class="qr-code-wrapper">
-            <div class="qr-frame">
-              <img [src]="qrCode()" alt="QR Code WhatsApp" class="qr-code-img" />
+              <div class="chat-actions">
+                @if (conv.leadId) {
+                  <a 
+                    [routerLink]="['/leads', conv.leadId, 'edit']" 
+                    class="btn btn-sm btn-outline btn-view-lead"
+                    title="Abrir detalhes e funil de vendas do Lead"
+                  >
+                    👤 Ver Ficha no CRM
+                  </a>
+                }
+              </div>
             </div>
-            <p class="qr-hint">Atualizando automaticamente assim que você escanear...</p>
-          </div>
+
+            <!-- Fluxo de Mensagens -->
+            <div class="chat-messages-body" #messagesContainer>
+              @if (loadingMessages() && messages().length === 0) {
+                <div class="messages-loading">
+                  <div class="spinner-sm"></div>
+                  <span>Carregando mensagens...</span>
+                </div>
+              } @else if (messages().length === 0) {
+                <div class="messages-empty">
+                  <p>Inicie uma conversa digitando abaixo.</p>
+                </div>
+              } @else {
+                <div class="messages-flow">
+                  @for (msg of messages(); track msg.id) {
+                    <div class="chat-bubble-row" [class.is-mine]="msg.fromMe">
+                      <div class="chat-bubble" [class.bubble-mine]="msg.fromMe" [class.bubble-theirs]="!msg.fromMe">
+                        <div class="bubble-sender">{{ msg.senderName || (msg.fromMe ? 'Imobiliária' : conv.contactName) }}</div>
+                        <div class="bubble-text">{{ msg.messageText }}</div>
+                        <div class="bubble-meta">
+                          <span class="bubble-time">{{ formatTime(msg.timestamp) }}</span>
+                          @if (msg.fromMe) {
+                            <span class="bubble-check">✓✓</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Barra de Envio de Mensagem -->
+            <div class="chat-input-row">
+              <input 
+                type="text" 
+                class="chat-text-input" 
+                [placeholder]="'Responder para ' + conv.contactName + '...'"
+                [(ngModel)]="newMessage"
+                (keydown)="onKeyDown($event)"
+                [disabled]="sendingMessage()"
+              />
+              <button 
+                type="button" 
+                class="btn-send-whatsapp" 
+                (click)="sendActiveMessage()"
+                [disabled]="!newMessage.trim() || sendingMessage()"
+              >
+                {{ sendingMessage() ? 'Enviando...' : 'Enviar' }}
+              </button>
+            </div>
+
+          } @else {
+            <!-- Nenhum chat selecionado -->
+            <div class="no-chat-selected">
+              <div class="placeholder-icon">💬</div>
+              <h3>Selecione uma Conversa</h3>
+              <p>Escolha um contato na lista à esquerda para visualizar o histórico de mensagens e responder diretamente pelo WhatsApp da imobiliária.</p>
+            </div>
+          }
         </div>
 
-        <div class="qr-footer">
-          <button type="button" class="btn btn-outline" (click)="cancelConnect()">Cancelar</button>
-        </div>
       </div>
     }
 
-    <!-- ESTADO 3: DESCONECTADO -->
-    @else {
-      <div class="card empty-card">
-        <div class="whatsapp-brand-icon">
-          <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor">
-            <path d="M12.031 2C6.5 2 2.008 6.492 2.008 12.023c0 1.766.46 3.492 1.336 5.016L2 22l5.125-1.344a9.98 9.98 0 0 0 4.906 1.289h.004c5.527 0 10.02-4.492 10.02-10.023A10.03 10.03 0 0 0 12.031 2zm5.836 14.184c-.242.68-1.41 1.258-1.957 1.34-.52.078-1.199.11-3.668-.914-3.156-1.31-5.184-4.52-5.34-4.73-.156-.21-1.281-1.703-1.281-3.242 0-1.54.805-2.297 1.09-2.61.285-.312.625-.39.832-.39.207 0 .414.004.598.012.195.012.457-.074.715.547.266.637.91 2.227.992 2.39.082.164.137.356.027.575-.11.218-.164.355-.328.546-.164.192-.344.426-.492.574-.164.164-.336.34-.145.668.192.328.852 1.402 1.824 2.27 1.254 1.117 2.309 1.464 2.637 1.628.328.164.519.137.711-.082.191-.219.82-.957 1.039-1.285.219-.328.438-.274.738-.164.3.11 1.903.898 2.23 1.062.328.165.547.246.629.383.082.137.082.793-.16 1.473z"/>
-          </svg>
-        </div>
-
-        <h2>Conecte o WhatsApp da sua Imobiliária</h2>
-        <p class="empty-subtitle">
-          Centralize as conversas do seu site em um só lugar. Seus corretores poderão atender leads, tirar dúvidas e acompanhar propostas sem sair do CRM.
-        </p>
-
-        <div class="empty-features">
-          <div class="feature-item">
-            <span class="feature-icon">⚡</span>
-            <span><strong>Conexão em 10 segundos:</strong> Basta escanear o QR Code no seu aplicativo do WhatsApp.</span>
+    <!-- ========================================================
+         ABA 2: STATUS DA CONEXÃO & QR CODE
+         ======================================================== -->
+    @if (activeTab() === 'connection' || !status()?.isConnected) {
+      
+      <!-- ESTADO: CONECTADO COM SUCESSO -->
+      @if (status()?.isConnected) {
+        <div class="card status-card connected-card">
+          <div class="card-top">
+            <div class="status-indicator-badge success">
+              <span class="pulsing-dot"></span>
+              <span>WhatsApp Conectado e Ativo</span>
+            </div>
           </div>
-          <div class="feature-item">
-            <span class="feature-icon">👥</span>
-            <span><strong>Multiatendimento:</strong> Vários corretores podem atender os leads sem precisar de vários celulares.</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">🛡️</span>
-            <span><strong>Histórico Seguro:</strong> Registros das conversas ficam salvos na nuvem da sua imobiliária.</span>
-          </div>
-        </div>
 
-        <div class="empty-actions">
-          <button 
-            type="button" 
-            class="btn btn-whatsapp" 
-            (click)="startConnect()" 
-            [disabled]="actionLoading()"
-          >
-            <span class="btn-icon">📱</span>
-            <span>{{ actionLoading() ? 'Gerando QR Code...' : 'Conectar WhatsApp Agora' }}</span>
-          </button>
+          <div class="profile-hero">
+            <div class="avatar-container">
+              @if (status()?.profilePictureUrl) {
+                <img [src]="status()!.profilePictureUrl!" alt="Foto do Perfil" class="profile-img" />
+              } @else {
+                <div class="profile-avatar-fallback">📱</div>
+              }
+            </div>
+            <div class="profile-meta">
+              <h2>{{ status()?.profileName || 'WhatsApp da Imobiliária' }}</h2>
+              <p class="phone-number">{{ formatPhone(status()?.phoneNumber) }}</p>
+            </div>
+          </div>
+
+          <div class="benefits-panel">
+            <h3>Recursos Ativos nesta Conexão:</h3>
+            <ul class="benefits-list">
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>Central de Mensagens:</strong> Visualize e responda conversas na aba de Conversas Recentes.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>Histórico em tempo real:</strong> Mensagens trocadas são sincronizadas na ficha de cada lead.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>Respostas pelo CRM:</strong> Seus corretores podem responder clientes diretamente pelo painel administrativo.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span><strong>Segurança da carteira:</strong> O histórico de negociações fica seguro na imobiliária, mesmo se corretores mudarem.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-footer">
+            <button 
+              type="button" 
+              class="btn btn-outline-danger" 
+              (click)="disconnect()" 
+              [disabled]="actionLoading()"
+            >
+              {{ actionLoading() ? 'Desconectando...' : 'Desconectar este WhatsApp' }}
+            </button>
+          </div>
         </div>
-      </div>
+      }
+
+      <!-- ESTADO: CONECTANDO (EXIBINDO QR CODE) -->
+      @else if (connecting() && qrCode()) {
+        <div class="card qr-card">
+          <div class="qr-header">
+            <div class="status-indicator-badge warning">
+              <span class="pulsing-dot warning"></span>
+              <span>Aguardando leitura do QR Code</span>
+            </div>
+            <h2>Conecte seu WhatsApp</h2>
+            <p class="qr-subtitle">Abra o WhatsApp no celular e aponte a câmera para o código abaixo</p>
+          </div>
+
+          <div class="qr-content">
+            <div class="qr-instructions">
+              <ol>
+                <li>
+                  <span class="step-num">1</span>
+                  <div>Abra o aplicativo do <strong>WhatsApp</strong> no seu celular.</div>
+                </li>
+                <li>
+                  <span class="step-num">2</span>
+                  <div>Toque em <strong>Configurações</strong> (no iPhone) ou nos <strong>três pontinhos</strong> (no Android).</div>
+                </li>
+                <li>
+                  <span class="step-num">3</span>
+                  <div>Selecione a opção <strong>Aparelhos conectados</strong>.</div>
+                </li>
+                <li>
+                  <span class="step-num">4</span>
+                  <div>Toque em <strong>Conectar um aparelho</strong> e aponte a câmera para esta tela:</div>
+                </li>
+              </ol>
+            </div>
+
+            <div class="qr-box">
+              <img [src]="qrCode()!" alt="QR Code WhatsApp" class="qr-image" />
+              <div class="qr-refresh-hint">
+                <span class="spinner-sm"></span>
+                <span>Aguardando sincronização automática...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button type="button" class="btn btn-outline" (click)="cancelConnect()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- ESTADO: DESCONECTADO -->
+      @else {
+        <div class="card disconnected-card">
+          <div class="disconnected-hero">
+            <div class="disconnected-icon">📱</div>
+            <h2>Conecte o WhatsApp da sua Imobiliária</h2>
+            <p class="disconnected-desc">
+              Centralize o atendimento ao cliente, envie mensagens diretamente pela ficha dos leads
+              e nunca perca o histórico de negociações da sua equipe.
+            </p>
+
+            <button 
+              type="button" 
+              class="btn btn-primary btn-lg" 
+              (click)="startConnect()" 
+              [disabled]="actionLoading()"
+            >
+              {{ actionLoading() ? 'Iniciando servidor...' : 'Conectar WhatsApp Agora' }}
+            </button>
+          </div>
+        </div>
+      }
+
     }
 
   }

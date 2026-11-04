@@ -11,6 +11,18 @@ namespace Api.Controllers;
 
 public record SendWhatsAppMessageRequest(string Message);
 
+public record WhatsAppConversationDto(
+    string Phone,
+    string ContactName,
+    Guid? LeadId,
+    string? LeadStatus,
+    string? PropertyTitle,
+    string LastMessage,
+    DateTime LastMessageTimestamp,
+    bool LastMessageFromMe,
+    int TotalMessages
+);
+
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -130,6 +142,142 @@ public class WhatsAppController : ControllerBase
         {
             CompanyId = _currentUser.CompanyId,
             LeadId = lead.Id,
+            Phone = cleanPhone,
+            FromMe = true,
+            SenderName = _currentUser.Name ?? "Imobiliária",
+            MessageText = request.Message.Trim(),
+            MessageType = "conversation",
+            Status = "SENT",
+            Timestamp = DateTime.UtcNow
+        };
+
+        _db.Set<WhatsAppMessage>().Add(messageEntity);
+        await _db.SaveChangesAsync();
+
+        return Ok(messageEntity);
+    }
+
+    /// <summary>
+    /// Retorna a lista de todas as conversas agrupadas com a última mensagem trocada
+    /// </summary>
+    [HttpGet("conversations")]
+    public async Task<ActionResult<IEnumerable<WhatsAppConversationDto>>> GetConversations()
+    {
+        var companyId = _currentUser.CompanyId;
+
+        var messages = await _db.Set<WhatsAppMessage>()
+            .Where(m => m.CompanyId == companyId)
+            .OrderByDescending(m => m.Timestamp)
+            .ToListAsync();
+
+        if (messages.Count == 0)
+        {
+            return Ok(Enumerable.Empty<WhatsAppConversationDto>());
+        }
+
+        var leads = await _db.Set<Lead>()
+            .Include(l => l.Property)
+            .Where(l => l.CompanyId == companyId)
+            .ToListAsync();
+
+        var conversationGroups = messages
+            .GroupBy(m =>
+            {
+                var clean = new string(m.Phone.Where(char.IsDigit).ToArray());
+                return clean.Length >= 8 ? clean[^8..] : clean;
+            })
+            .Where(g => !string.IsNullOrEmpty(g.Key))
+            .ToList();
+
+        var result = new List<WhatsAppConversationDto>();
+
+        foreach (var group in conversationGroups)
+        {
+            var latestMsg = group.OrderByDescending(m => m.Timestamp).First();
+            var phoneTail = group.Key;
+
+            var lead = leads.FirstOrDefault(l =>
+            {
+                var lClean = new string(l.Phone.Where(char.IsDigit).ToArray());
+                return lClean.EndsWith(phoneTail) || l.Phone.Contains(phoneTail);
+            });
+
+            string contactName = lead?.Name
+                ?? group.FirstOrDefault(m => !m.FromMe && !string.IsNullOrWhiteSpace(m.SenderName))?.SenderName
+                ?? latestMsg.Phone;
+
+            result.Add(new WhatsAppConversationDto(
+                Phone: latestMsg.Phone,
+                ContactName: contactName,
+                LeadId: lead?.Id,
+                LeadStatus: lead?.Status.ToString(),
+                PropertyTitle: lead?.Property?.Title,
+                LastMessage: latestMsg.MessageText,
+                LastMessageTimestamp: latestMsg.Timestamp,
+                LastMessageFromMe: latestMsg.FromMe,
+                TotalMessages: group.Count()
+            ));
+        }
+
+        return Ok(result.OrderByDescending(c => c.LastMessageTimestamp));
+    }
+
+    /// <summary>
+    /// Retorna o histórico de mensagens de um telefone/conversa específica
+    /// </summary>
+    [HttpGet("conversations/{phone}/messages")]
+    public async Task<ActionResult<IEnumerable<WhatsAppMessage>>> GetConversationMessages(string phone)
+    {
+        var cleanPhone = new string(phone.Where(char.IsDigit).ToArray());
+        var phoneTail = cleanPhone.Length >= 8 ? cleanPhone[^8..] : cleanPhone;
+
+        var messages = await _db.Set<WhatsAppMessage>()
+            .Where(m => m.CompanyId == _currentUser.CompanyId &&
+                        (m.Phone == phone || (phoneTail.Length > 0 && m.Phone.EndsWith(phoneTail))))
+            .OrderBy(m => m.Timestamp)
+            .ToListAsync();
+
+        return Ok(messages);
+    }
+
+    /// <summary>
+    /// Envia uma mensagem diretamente para um telefone/conversa
+    /// </summary>
+    [HttpPost("conversations/{phone}/messages")]
+    public async Task<ActionResult<WhatsAppMessage>> SendConversationMessage(string phone, [FromBody] SendWhatsAppMessageRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Message))
+        {
+            return BadRequest("A mensagem não pode ser vazia.");
+        }
+
+        var cleanPhone = new string(phone.Where(char.IsDigit).ToArray());
+        if (string.IsNullOrWhiteSpace(cleanPhone))
+        {
+            return BadRequest("Telefone inválido.");
+        }
+
+        var instanceName = GetInstanceName();
+        var status = await _evolutionApi.GetStatusAsync(instanceName);
+        if (!status.IsConnected)
+        {
+            return BadRequest("O WhatsApp da imobiliária não está conectado. Vá até o menu WhatsApp para conectar.");
+        }
+
+        var sent = await _evolutionApi.SendTextMessageAsync(instanceName, cleanPhone, request.Message);
+        if (!sent)
+        {
+            return StatusCode(500, "Falha ao enviar a mensagem pelo WhatsApp.");
+        }
+
+        var phoneTail = cleanPhone.Length >= 8 ? cleanPhone[^8..] : cleanPhone;
+        var lead = await _db.Set<Lead>()
+            .FirstOrDefaultAsync(l => l.CompanyId == _currentUser.CompanyId && l.Phone.Contains(phoneTail));
+
+        var messageEntity = new WhatsAppMessage
+        {
+            CompanyId = _currentUser.CompanyId,
+            LeadId = lead?.Id,
             Phone = cleanPhone,
             FromMe = true,
             SenderName = _currentUser.Name ?? "Imobiliária",
