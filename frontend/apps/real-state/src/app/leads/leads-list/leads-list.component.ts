@@ -59,6 +59,15 @@ export class LeadsListComponent implements OnInit {
   // Controle de período personalizado (datas de início e fim)
   readonly isCustomPeriod = signal(false);
 
+  // Modo de visualização: Kanban (Funil) ou Lista
+  readonly viewMode = signal<'kanban' | 'list'>(
+    (typeof localStorage !== 'undefined' && (localStorage.getItem('leads_view_mode') as 'kanban' | 'list')) || 'kanban'
+  );
+
+  // Drag and Drop do Kanban
+  readonly draggedLead = signal<Lead | null>(null);
+  readonly dragOverColumn = signal<LeadStatus | null>(null);
+
   columns: TableColumn<Lead>[] = [];
 
   readonly result = signal<PagedResult<Lead> | null>(null);
@@ -70,6 +79,10 @@ export class LeadsListComponent implements OnInit {
   ngOnInit(): void {
     const userRole = this.authService.currentUser()?.role;
     this.isAdmin.set(userRole === 'CompanyAdmin' || userRole === 'SuperAdmin');
+
+    if (this.viewMode() === 'kanban') {
+      this.filter.pageSize = 100;
+    }
 
     this.columns = [
       { key: 'name', label: 'Nome', sortable: true },
@@ -200,6 +213,107 @@ export class LeadsListComponent implements OnInit {
 
   onRowClick(lead: Lead): void {
     this.router.navigate(['/leads', lead.id, 'edit']);
+  }
+
+  setViewMode(mode: 'kanban' | 'list'): void {
+    this.viewMode.set(mode);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('leads_view_mode', mode);
+    }
+    this.filter.pageSize = mode === 'kanban' ? 100 : 10;
+    this.filter.pageNumber = 1;
+    this.fetch();
+  }
+
+  getLeadsByStatus(status: LeadStatus): Lead[] {
+    const items = this.result()?.items ?? [];
+    return items.filter((l) => l.status === status);
+  }
+
+  openLead(lead: Lead): void {
+    this.router.navigate(['/leads', lead.id, 'edit']);
+  }
+
+  onDragStart(lead: Lead, event: DragEvent): void {
+    this.draggedLead.set(lead);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', lead.id);
+    }
+  }
+
+  onDragOver(status: LeadStatus, event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    if (this.dragOverColumn() !== status) {
+      this.dragOverColumn.set(status);
+    }
+  }
+
+  onDragLeave(status: LeadStatus, event: DragEvent): void {
+    const target = event.currentTarget as HTMLElement;
+    const related = event.relatedTarget as Node | null;
+    if (!related || !target.contains(related)) {
+      if (this.dragOverColumn() === status) {
+        this.dragOverColumn.set(null);
+      }
+    }
+  }
+
+  onDragEnd(): void {
+    this.draggedLead.set(null);
+    this.dragOverColumn.set(null);
+  }
+
+  onDrop(targetStatus: LeadStatus, event: DragEvent): void {
+    event.preventDefault();
+    const lead = this.draggedLead();
+    this.dragOverColumn.set(null);
+    this.draggedLead.set(null);
+
+    if (!lead || lead.status === targetStatus) return;
+
+    const previousStatus = lead.status;
+    lead.status = targetStatus;
+
+    const payload = {
+      id: lead.id,
+      companyId: lead.companyId,
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      message: lead.message,
+      propertyId: lead.propertyId,
+      status: targetStatus,
+      assignedUserId: lead.assignedUserId,
+    };
+
+    this.leadService.update(lead.id, payload as any).subscribe({
+      error: (err) => {
+        console.error('Erro ao mover lead', err);
+        lead.status = previousStatus;
+        alert('Não foi possível mover o lead de fase.');
+      },
+    });
+  }
+
+  formatRelativeTime(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Agora';
+    if (diffMins < 60) return `${diffMins}m atrás`;
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `${diffDays}d atrás`;
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   }
 
   onSearchChange(term: string): void {

@@ -3,11 +3,20 @@
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-6);
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
 .page-header {
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    width: 100%;
+  }
+
   h1 {
     font-family: var(--font-display);
     font-size: 28px;
@@ -18,6 +27,45 @@
     color: var(--color-ink-muted);
     margin: var(--space-1) 0 0;
     font-size: 13px;
+  }
+}
+
+.view-toggle {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  gap: 3px;
+
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: var(--color-ink);
+    }
+
+    &.active {
+      background: #ffffff;
+      color: var(--color-ink);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .toggle-icon {
+      font-size: 14px;
+    }
   }
 }
 
@@ -293,4 +341,317 @@
 /* Dá espaço vertical suficiente para que o dropdown flutuante nunca seja cortado em tabelas curtas */
 :host ::ng-deep ws-data-table .table-wrapper {
   min-height: 340px;
+}
+
+/* ========================================================
+   Visualização em Funil (Kanban)
+   ======================================================== */
+.kanban-wrapper {
+  overflow-x: auto;
+  padding-bottom: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.kanban-board {
+  display: flex;
+  gap: var(--space-4);
+  min-width: 1240px;
+  align-items: flex-start;
+}
+
+.kanban-column {
+  flex: 1 1 0;
+  min-width: 240px;
+  max-width: 280px;
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  max-height: calc(100vh - 240px);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+  /* Acentos de cor específicos por fase */
+  &.column-New {
+    border-top: 4px solid #0284c7;
+    .status-indicator-dot { background-color: #0284c7; }
+  }
+
+  &.column-Contacted {
+    border-top: 4px solid #d97706;
+    .status-indicator-dot { background-color: #d97706; }
+  }
+
+  &.column-Qualified {
+    border-top: 4px solid #9333ea;
+    .status-indicator-dot { background-color: #9333ea; }
+  }
+
+  &.column-Converted {
+    border-top: 4px solid #16a34a;
+    .status-indicator-dot { background-color: #16a34a; }
+  }
+
+  &.column-Lost {
+    border-top: 4px solid #dc2626;
+    .status-indicator-dot { background-color: #dc2626; }
+  }
+
+  &.drop-active {
+    background-color: #eff6ff;
+    border: 2px dashed #0284c7;
+    transform: scale(1.01);
+  }
+
+  .column-header {
+    padding: 12px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .column-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .status-indicator-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-ink);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    .column-count-badge {
+      background: #f1f5f9;
+      color: var(--color-ink-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 9999px;
+    }
+  }
+
+  .cards-list {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    flex: 1;
+
+    /* Custom thin scrollbar */
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  }
+
+  .column-empty-state {
+    padding: 40px 10px;
+    text-align: center;
+    color: var(--color-ink-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+}
+
+.kanban-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.is-dragging {
+    opacity: 0.4;
+    transform: scale(0.97);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+
+    .lead-name {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--color-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+
+    .lead-time {
+      font-size: 11px;
+      color: var(--color-ink-muted);
+      white-space: nowrap;
+    }
+  }
+
+  .card-contact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #475569;
+
+    .phone-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-card-whatsapp {
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 12px;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+
+      &:hover {
+        background: #22c55e;
+        color: #ffffff;
+        transform: scale(1.15);
+      }
+    }
+  }
+
+  .card-property {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--color-primary);
+    background: #f0fdf4;
+    border: 1px solid #dcfce7;
+    padding: 4px 8px;
+    border-radius: 4px;
+
+    .prop-icon {
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .prop-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+  }
+
+  .card-snippet {
+    font-size: 11px;
+    color: var(--color-ink-muted);
+    font-style: italic;
+    line-height: 1.35;
+    background: #f8fafc;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border-left: 2px solid var(--color-border);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+    padding-top: 6px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 11px;
+
+    .user-assignment {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #475569;
+
+      .user-mini-avatar {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #334155;
+        font-size: 9.5px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .user-mini-name {
+        max-width: 130px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .unassigned-badge {
+        color: #94a3b8;
+        font-style: italic;
+      }
+    }
+
+    .drag-hint {
+      color: #cbd5e1;
+      font-size: 12px;
+      letter-spacing: -1px;
+      user-select: none;
+    }
+  }
 }

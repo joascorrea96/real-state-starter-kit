@@ -1,16 +1,45 @@
 <div class="page">
   <header class="page-header">
-    <h1>Leads</h1>
-    <p class="subtitle">Contatos recebidos pelo site público</p>
+    <div class="header-content">
+      <div>
+        <h1>Leads</h1>
+        <p class="subtitle">Contatos e oportunidades do funil comercial</p>
+      </div>
+
+      <div class="view-toggle">
+        <button 
+          type="button" 
+          class="toggle-btn" 
+          [class.active]="viewMode() === 'kanban'" 
+          (click)="setViewMode('kanban')"
+          title="Visualizar como Funil de Vendas (Kanban)"
+        >
+          <span class="toggle-icon">▦</span>
+          <span>Funil (Kanban)</span>
+        </button>
+        <button 
+          type="button" 
+          class="toggle-btn" 
+          [class.active]="viewMode() === 'list'" 
+          (click)="setViewMode('list')"
+          title="Visualizar como Lista"
+        >
+          <span class="toggle-icon">☰</span>
+          <span>Lista</span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <ws-search-filter-bar placeholder="Buscar por nome, telefone ou email..." (searchChange)="onSearchChange($event)">
-    <select (change)="onStatusFilterChange($any($event.target).value)" title="Filtrar por fase de atendimento">
-      <option value="">Todas as fases</option>
-      @for (status of statuses; track status) {
-        <option [value]="status">{{ statusLabel(status) }}</option>
-      }
-    </select>
+    @if (viewMode() === 'list') {
+      <select (change)="onStatusFilterChange($any($event.target).value)" title="Filtrar por fase de atendimento">
+        <option value="">Todas as fases</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    }
 
     @if (isAdmin()) {
       <select (change)="onUserFilterChange($any($event.target).value)" title="Filtrar por responsável">
@@ -39,96 +68,135 @@
     }
   </ws-search-filter-bar>
 
-  <!-- Template para o Status em linha (Dropdown Moderno Customizado com Setinha Sutil) -->
-  <ng-template #statusTemplate let-lead="row">
-    <div class="custom-dropdown" (click)="$event.stopPropagation()">
-      <button
-        type="button"
-        class="dropdown-trigger-pill status-pill status-{{ lead.status }}"
-        [class.menu-open]="isDropdownOpen(lead.id, 'status')"
-        (click)="toggleDropdown(lead.id, 'status', $event)"
-        data-prevent-row-click
-        title="Clique para alterar a fase de atendimento"
-      >
-        <span class="status-dot dot-{{ lead.status }}"></span>
-        <span class="pill-text">{{ statusLabel(lead.status) }}</span>
-        <svg class="chevron-icon" [class.rotated]="isDropdownOpen(lead.id, 'status')" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-        </svg>
-      </button>
+  <!-- ========================================================
+       MODO 1: VISUALIZAÇÃO EM FUNIL (KANBAN)
+       ======================================================== -->
+  @if (viewMode() === 'kanban') {
+    <div class="kanban-wrapper">
+      <div class="kanban-board">
+        @for (status of statuses; track status) {
+          <div 
+            class="kanban-column column-{{ status }}"
+            [class.drop-active]="dragOverColumn() === status"
+            (dragover)="onDragOver(status, $event)"
+            (dragleave)="onDragLeave(status, $event)"
+            (drop)="onDrop(status, $event)"
+          >
+            <!-- Topo da Coluna -->
+            <div class="column-header">
+              <div class="column-title">
+                <span class="status-indicator-dot dot-{{ status }}"></span>
+                <h3>{{ statusLabel(status) }}</h3>
+              </div>
+              <span class="column-count-badge">{{ getLeadsByStatus(status).length }}</span>
+            </div>
 
-      @if (isDropdownOpen(lead.id, 'status')) {
-        <div class="dropdown-menu status-menu" data-prevent-row-click>
-          @for (status of statuses; track status) {
-            <button
-              type="button"
-              class="dropdown-menu-item"
-              [class.is-selected]="lead.status === status"
-              (click)="onSelectStatus(lead, status, $event)"
-            >
-              <span class="status-dot dot-{{ status }}"></span>
-              <span class="item-text">{{ statusLabel(status) }}</span>
-              @if (lead.status === status) {
-                <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
+            <!-- Lista de Cards Arrastáveis -->
+            <div class="cards-list">
+              @if (getLeadsByStatus(status).length === 0) {
+                <div class="column-empty-state">
+                  <span>Nenhum lead nesta fase</span>
+                </div>
+              } @else {
+                @for (lead of getLeadsByStatus(status); track lead.id) {
+                  <div 
+                    class="kanban-card"
+                    draggable="true"
+                    [class.is-dragging]="draggedLead()?.id === lead.id"
+                    (dragstart)="onDragStart(lead, $event)"
+                    (dragend)="onDragEnd()"
+                    (click)="openLead(lead)"
+                  >
+                    <!-- Linha Superior: Nome e Data Relativa -->
+                    <div class="card-top">
+                      <h4 class="lead-name" [title]="lead.name">{{ lead.name }}</h4>
+                      <span class="lead-time" [title]="lead.createdAt">{{ formatRelativeTime(lead.createdAt) }}</span>
+                    </div>
+
+                    <!-- Contato e Atalho para WhatsApp -->
+                    <div class="card-contact">
+                      <span class="phone-text">📞 {{ lead.phone }}</span>
+                      <a 
+                        [routerLink]="['/leads', lead.id, 'edit']"
+                        class="btn-card-whatsapp" 
+                        title="Atender lead via WhatsApp"
+                        (click)="$event.stopPropagation()"
+                      >
+                        💬
+                      </a>
+                    </div>
+
+                    <!-- Imóvel de Interesse (se houver) -->
+                    @if (lead.property) {
+                      <div class="card-property" [title]="lead.property.title">
+                        <span class="prop-icon">🏠</span>
+                        <span class="prop-title">{{ lead.property.title }}</span>
+                      </div>
+                    }
+
+                    <!-- Mensagem do Lead -->
+                    @if (lead.message) {
+                      <div class="card-snippet" [title]="lead.message">
+                        "{{ lead.message }}"
+                      </div>
+                    }
+
+                    <!-- Rodapé: Corretor Responsável -->
+                    <div class="card-footer">
+                      <div class="user-assignment" [class.unassigned]="!lead.assignedUserId">
+                        @if (lead.assignedUser) {
+                          <span class="user-mini-avatar">{{ lead.assignedUser.name.charAt(0).toUpperCase() }}</span>
+                          <span class="user-mini-name">{{ lead.assignedUser.name }}</span>
+                        } @else {
+                          <span class="unassigned-badge">Não atribuído</span>
+                        }
+                      </div>
+                      <span class="drag-hint">⋮⋮</span>
+                    </div>
+                  </div>
+                }
               }
-            </button>
-          }
-        </div>
-      }
+            </div>
+          </div>
+        }
+      </div>
     </div>
-  </ng-template>
+  }
 
-  <!-- Template para o Responsável em linha (Dropdown Moderno Customizado com Setinha Sutil) -->
-  <ng-template #userTemplate let-lead="row">
-    <div class="custom-dropdown" (click)="$event.stopPropagation()">
-      @if (isAdmin()) {
+  <!-- ========================================================
+       MODO 2: VISUALIZAÇÃO EM LISTA (TABELA CLÁSSICA)
+       ======================================================== -->
+  @else {
+    <!-- Template para o Status em linha -->
+    <ng-template #statusTemplate let-lead="row">
+      <div class="custom-dropdown" (click)="$event.stopPropagation()">
         <button
           type="button"
-          class="dropdown-trigger-pill user-pill"
-          [class.unassigned]="!lead.assignedUserId"
-          [class.menu-open]="isDropdownOpen(lead.id, 'user')"
-          (click)="toggleDropdown(lead.id, 'user', $event)"
+          class="dropdown-trigger-pill status-pill status-{{ lead.status }}"
+          [class.menu-open]="isDropdownOpen(lead.id, 'status')"
+          (click)="toggleDropdown(lead.id, 'status', $event)"
           data-prevent-row-click
-          title="Clique para alterar responsável"
+          title="Clique para alterar a fase de atendimento"
         >
-          @if (lead.assignedUser?.name) {
-            <span class="user-avatar-dot">{{ lead.assignedUser.name.charAt(0).toUpperCase() }}</span>
-          }
-          <span class="pill-text">{{ lead.assignedUser?.name || 'Não atribuído' }}</span>
-          <svg class="chevron-icon" [class.rotated]="isDropdownOpen(lead.id, 'user')" viewBox="0 0 20 20" fill="currentColor">
+          <span class="status-dot dot-{{ lead.status }}"></span>
+          <span class="pill-text">{{ statusLabel(lead.status) }}</span>
+          <svg class="chevron-icon" [class.rotated]="isDropdownOpen(lead.id, 'status')" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
           </svg>
         </button>
 
-        @if (isDropdownOpen(lead.id, 'user')) {
-          <div class="dropdown-menu user-menu" data-prevent-row-click>
-            <button
-              type="button"
-              class="dropdown-menu-item"
-              [class.is-selected]="!lead.assignedUserId"
-              (click)="onSelectUser(lead, null, $event)"
-            >
-              <span class="user-avatar-dot unassigned-dot">-</span>
-              <span class="item-text text-muted">Não atribuído</span>
-              @if (!lead.assignedUserId) {
-                <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-              }
-            </button>
-
-            @for (user of users(); track user.id) {
+        @if (isDropdownOpen(lead.id, 'status')) {
+          <div class="dropdown-menu status-menu" data-prevent-row-click>
+            @for (status of statuses; track status) {
               <button
                 type="button"
                 class="dropdown-menu-item"
-                [class.is-selected]="lead.assignedUserId === user.id"
-                (click)="onSelectUser(lead, user.id, $event)"
+                [class.is-selected]="lead.status === status"
+                (click)="onSelectStatus(lead, status, $event)"
               >
-                <span class="user-avatar-dot">{{ user.name.charAt(0).toUpperCase() }}</span>
-                <span class="item-text">{{ user.name }}</span>
-                @if (lead.assignedUserId === user.id) {
+                <span class="status-dot dot-{{ status }}"></span>
+                <span class="item-text">{{ statusLabel(status) }}</span>
+                @if (lead.status === status) {
                   <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                   </svg>
@@ -137,33 +205,94 @@
             }
           </div>
         }
-      } @else {
-        <span class="user-static-label" [class.unassigned]="!lead.assignedUserId">
-          {{ lead.assignedUser?.name || 'Não atribuído' }}
-        </span>
-      }
-    </div>
-  </ng-template>
+      </div>
+    </ng-template>
 
-  <ws-data-table
-    [columns]="columns"
-    [rows]="result()?.items ?? []"
-    [loading]="loading()"
-    [sortBy]="'createdAt'"
-    [sortDescending]="true"
-    emptyMessage="Nenhum lead recebido ainda."
-    (sortChange)="onSortChange($event)"
-    (rowClick)="onRowClick($event)"
-  />
+    <!-- Template para o Responsável em linha -->
+    <ng-template #userTemplate let-lead="row">
+      <div class="custom-dropdown" (click)="$event.stopPropagation()">
+        @if (isAdmin()) {
+          <button
+            type="button"
+            class="dropdown-trigger-pill user-pill"
+            [class.unassigned]="!lead.assignedUserId"
+            [class.menu-open]="isDropdownOpen(lead.id, 'user')"
+            (click)="toggleDropdown(lead.id, 'user', $event)"
+            data-prevent-row-click
+            title="Clique para alterar responsável"
+          >
+            @if (lead.assignedUser?.name) {
+              <span class="user-avatar-dot">{{ lead.assignedUser.name.charAt(0).toUpperCase() }}</span>
+            }
+            <span class="pill-text">{{ lead.assignedUser?.name || 'Não atribuído' }}</span>
+            <svg class="chevron-icon" [class.rotated]="isDropdownOpen(lead.id, 'user')" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+            </svg>
+          </button>
 
-  @if (result(); as page) {
-    <ws-pagination-bar
-      [pageNumber]="page.pageNumber"
-      [totalPages]="page.totalPages"
-      [totalCount]="page.totalCount"
-      [hasPreviousPage]="page.hasPreviousPage"
-      [hasNextPage]="page.hasNextPage"
-      (pageChange)="onPageChange($event)"
+          @if (isDropdownOpen(lead.id, 'user')) {
+            <div class="dropdown-menu user-menu" data-prevent-row-click>
+              <button
+                type="button"
+                class="dropdown-menu-item"
+                [class.is-selected]="!lead.assignedUserId"
+                (click)="onSelectUser(lead, null, $event)"
+              >
+                <span class="user-avatar-dot unassigned-dot">-</span>
+                <span class="item-text text-muted">Não atribuído</span>
+                @if (!lead.assignedUserId) {
+                  <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                }
+              </button>
+
+              @for (user of users(); track user.id) {
+                <button
+                  type="button"
+                  class="dropdown-menu-item"
+                  [class.is-selected]="lead.assignedUserId === user.id"
+                  (click)="onSelectUser(lead, user.id, $event)"
+                >
+                  <span class="user-avatar-dot">{{ user.name.charAt(0).toUpperCase() }}</span>
+                  <span class="item-text">{{ user.name }}</span>
+                  @if (lead.assignedUserId === user.id) {
+                    <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        } @else {
+          <span class="user-static-label" [class.unassigned]="!lead.assignedUserId">
+            {{ lead.assignedUser?.name || 'Não atribuído' }}
+          </span>
+        }
+      </div>
+    </ng-template>
+
+    <ws-data-table
+      [columns]="columns"
+      [rows]="result()?.items ?? []"
+      [loading]="loading()"
+      [sortBy]="'createdAt'"
+      [sortDescending]="true"
+      emptyMessage="Nenhum lead recebido ainda."
+      (sortChange)="onSortChange($event)"
+      (rowClick)="onRowClick($event)"
     />
+
+    @if (result(); as page) {
+      <ws-pagination-bar
+        [pageNumber]="page.pageNumber"
+        [totalPages]="page.totalPages"
+        [totalCount]="page.totalCount"
+        [hasPreviousPage]="page.hasPreviousPage"
+        [hasNextPage]="page.hasNextPage"
+        (pageChange)="onPageChange($event)"
+      />
+    }
   }
 </div>
