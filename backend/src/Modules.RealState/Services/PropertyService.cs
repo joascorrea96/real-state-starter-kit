@@ -63,6 +63,9 @@ public class PropertyService : GenericService<Property>
         if (filters.TryGetValue("status", out var statusRaw) && Enum.TryParse<PropertyStatus>(statusRaw, true, out var propertyStatus))
             query = query.Where(p => p.Status == propertyStatus);
 
+        if (filters.TryGetValue("isActive", out var isActiveRaw) && bool.TryParse(isActiveRaw, out var isActive))
+            query = query.Where(p => p.IsActive == isActive);
+
         return query;
     }
 }

@@ -10,14 +10,20 @@
   </header>
 
   <ws-search-filter-bar placeholder="Buscar por título, bairro ou cidade..." (searchChange)="onSearchChange($event)">
-    <select (change)="onPropertyTypeChange($any($event.target).value)">
+    <select (change)="onStatusActiveChange($any($event.target).value)" title="Filtrar por situação">
+      <option value="">Todas as situações</option>
+      <option value="true">Apenas Ativos</option>
+      <option value="false">Apenas Inativos</option>
+    </select>
+
+    <select (change)="onPropertyTypeChange($any($event.target).value)" title="Filtrar por tipo de imóvel">
       <option value="">Todos os tipos</option>
       @for (type of propertyTypes; track type) {
         <option [value]="type">{{ propertyTypeLabel(type) }}</option>
       }
     </select>
 
-    <select (change)="onListingTypeChange($any($event.target).value)">
+    <select (change)="onListingTypeChange($any($event.target).value)" title="Filtrar por finalidade">
       <option value="">Venda ou aluguel</option>
       @for (type of listingTypes; track type) {
         <option [value]="type">{{ listingTypeLabel(type) }}</option>
@@ -27,6 +33,19 @@
     <input type="number" placeholder="Preço mín." (change)="onMinPriceChange($any($event.target).value)" />
     <input type="number" placeholder="Preço máx." (change)="onMaxPriceChange($any($event.target).value)" />
   </ws-search-filter-bar>
+
+  <!-- Template para a Situação (Ativo / Inativo) com Badge Moderno -->
+  <ng-template #statusTemplate let-prop="row">
+    @if (prop.isActive) {
+      <span class="status-badge active" title="Imóvel ativo (visível no site público)">
+        <span class="dot"></span> Ativo
+      </span>
+    } @else {
+      <span class="status-badge inactive" title="Imóvel inativo (oculto no site público)">
+        <span class="dot"></span> Inativo
+      </span>
+    }
+  </ng-template>
 
   <ws-data-table
     [columns]="columns"

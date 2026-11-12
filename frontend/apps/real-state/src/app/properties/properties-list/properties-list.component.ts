@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild, inject, signal } from '@angular/core';
 import {
   DEFAULT_PAGINATION_FILTER,
   ListingType,
@@ -48,34 +48,18 @@ const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', cu
   templateUrl: './properties-list.component.html',
   styleUrl: './properties-list.component.scss',
 })
-export class PropertiesListComponent {
+export class PropertiesListComponent implements OnInit {
   private readonly propertyService = inject(PropertyService);
   private readonly router = inject(Router);
+
+  @ViewChild('statusTemplate', { static: true }) statusTemplate!: TemplateRef<any>;
 
   readonly propertyTypes = Object.values(PropertyType);
   readonly listingTypes = Object.values(ListingType);
   readonly propertyTypeLabel = (type: PropertyType) => PROPERTY_TYPE_LABELS[type];
   readonly listingTypeLabel = (type: ListingType) => LISTING_TYPE_LABELS[type];
 
-  readonly columns: TableColumn<Property>[] = [
-    { key: 'title', label: 'Título', sortable: true },
-    {
-      key: 'listingType',
-      label: 'Tipo',
-      formatter: (row) => `${this.propertyTypeLabel(row.type)} · ${this.listingTypeLabel(row.listingType)}`,
-    },
-    { key: 'neighborhood', label: 'Bairro', sortable: true },
-    { key: 'city', label: 'Cidade', sortable: true },
-    {
-      key: 'price',
-      label: 'Preço',
-      sortable: true,
-      align: 'right',
-      formatter: (row) => currencyFormatter.format(row.price),
-    },
-    { key: 'bedrooms', label: 'Quartos', align: 'center' },
-    { key: 'areaSqm', label: 'Área (m²)', align: 'right', formatter: (row) => row.areaSqm.toFixed(0) },
-  ];
+  columns: TableColumn<Property>[] = [];
 
   readonly result = signal<PagedResult<Property> | null>(null);
   readonly loading = signal(false);
@@ -83,13 +67,43 @@ export class PropertiesListComponent {
   private filter: PaginationFilter = { ...DEFAULT_PAGINATION_FILTER, pageSize: 10 };
   private customFilters: Record<string, string> = {};
 
-  constructor() {
+  ngOnInit(): void {
+    this.columns = [
+      { key: 'title', label: 'Título', sortable: true },
+      {
+        key: 'listingType',
+        label: 'Tipo',
+        formatter: (row) => `${this.propertyTypeLabel(row.type)} · ${this.listingTypeLabel(row.listingType)}`,
+      },
+      {
+        key: 'isActive',
+        label: 'Situação',
+        template: this.statusTemplate,
+        align: 'center',
+      },
+      { key: 'neighborhood', label: 'Bairro', sortable: true },
+      { key: 'city', label: 'Cidade', sortable: true },
+      {
+        key: 'price',
+        label: 'Preço',
+        sortable: true,
+        align: 'right',
+        formatter: (row) => currencyFormatter.format(row.price),
+      },
+      { key: 'bedrooms', label: 'Quartos', align: 'center' },
+      { key: 'areaSqm', label: 'Área (m²)', align: 'right', formatter: (row) => row.areaSqm.toFixed(0) },
+    ];
+
     this.fetch();
   }
 
   onSearchChange(term: string): void {
     this.filter = { ...this.filter, pageNumber: 1, searchTerm: term || undefined };
     this.fetch();
+  }
+
+  onStatusActiveChange(value: string): void {
+    this.applyCustomFilter('isActive', value);
   }
 
   onPropertyTypeChange(value: string): void {
@@ -119,7 +133,11 @@ export class PropertiesListComponent {
   }
 
   private applyCustomFilter(key: string, value: string): void {
-    this.customFilters = { ...this.customFilters, [key]: value };
+    if (!value) {
+      delete this.customFilters[key];
+    } else {
+      this.customFilters = { ...this.customFilters, [key]: value };
+    }
     this.filter = { ...this.filter, pageNumber: 1, filters: this.customFilters };
     this.fetch();
   }
