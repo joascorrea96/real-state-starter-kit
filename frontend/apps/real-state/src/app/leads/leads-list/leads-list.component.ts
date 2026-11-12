@@ -76,7 +76,7 @@ export class LeadsListComponent implements OnInit {
       { key: 'phone', label: 'Telefone' },
       {
         key: 'status',
-        label: 'Status',
+        label: 'Fase de Atendimento',
         template: this.statusTemplate,
         formatter: (row) => this.statusLabel(row.status),
       },

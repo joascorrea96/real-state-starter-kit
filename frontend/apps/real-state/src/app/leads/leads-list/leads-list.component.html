@@ -5,8 +5,8 @@
   </header>
 
   <ws-search-filter-bar placeholder="Buscar por nome, telefone ou email..." (searchChange)="onSearchChange($event)">
-    <select (change)="onStatusFilterChange($any($event.target).value)" title="Filtrar por status">
-      <option value="">Todos os status</option>
+    <select (change)="onStatusFilterChange($any($event.target).value)" title="Filtrar por fase de atendimento">
+      <option value="">Todas as fases</option>
       @for (status of statuses; track status) {
         <option [value]="status">{{ statusLabel(status) }}</option>
       }
@@ -48,7 +48,7 @@
         [class.menu-open]="isDropdownOpen(lead.id, 'status')"
         (click)="toggleDropdown(lead.id, 'status', $event)"
         data-prevent-row-click
-        title="Clique para alterar status"
+        title="Clique para alterar a fase de atendimento"
       >
         <span class="status-dot dot-{{ lead.status }}"></span>
         <span class="pill-text">{{ statusLabel(lead.status) }}</span>
